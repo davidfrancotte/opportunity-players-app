@@ -1,0 +1,12 @@
+# The repository root is the application root. Do not publish public/ or dist/.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "24"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Netlify maintains the adapter version automatically.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
