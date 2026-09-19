@@ -1,4 +1,5 @@
 // Client-only demo rules. The production API must enforce the same permissions.
+import { moderateText } from "./trust.ts";
 export const cities: Record<string, [number, number]> = {
   Liège: [50.6326, 5.5797],
   Bruxelles: [50.8503, 4.3517],
@@ -73,6 +74,7 @@ export type EventState = {
 };
 export type EventContext = { premium: boolean; city: string; now: number };
 export type EventAction =
+  | { type: "safety-notice"; text: string }
   | { type: "create"; match: Match }
   | { type: "reply"; id: string; slots: string[]; guests: string[] }
   | { type: "approve" | "decline"; id: string; user: string }
@@ -235,6 +237,18 @@ export function eventReducer(
   payload: { action: EventAction; context: EventContext },
 ): EventState {
   const { action: a, context: ctx } = payload;
+  if (a.type === "safety-notice") {
+    const s = structuredClone(state);
+    notice(
+      s,
+      `safety-${ctx.now}-${state.notices.length}`,
+      "me",
+      a.text,
+      "/securite",
+      "change",
+    );
+    return s;
+  }
   if (a.type === "reset") return createEventState(ctx.now);
   const s: EventState = structuredClone(state);
   s.error = "";
@@ -314,6 +328,10 @@ export function eventReducer(
     if (!ctx.premium)
       return fail("Un abonnement est nécessaire pour organiser un match.");
     const m = structuredClone(a.match);
+    if (moderateText(m.title + " " + m.venue))
+      return fail(
+        "Contenu bloqué par le filtre de démonstration. Reformulez le titre ou le lieu du match.",
+      );
     if (
       !m.title.trim() ||
       !m.venue.trim() ||

@@ -1,4 +1,5 @@
 import type { Category } from "./model";
+import { moderateText } from "./trust.ts";
 export type Member = {
   id: string;
   name: string;
@@ -85,7 +86,11 @@ export type Post = {
   comments: { id: string; name: string; text: string }[];
 };
 export type ChatMessage = { id: string; text: string; mine: boolean };
-export type Conversation = { memberId: string; unread: boolean; messages: ChatMessage[] };
+export type Conversation = {
+  memberId: string;
+  unread: boolean;
+  messages: ChatMessage[];
+};
 export type Opportunity = {
   id: string;
   title: string;
@@ -277,7 +282,11 @@ export type SocialAction =
   | { type: "gate"; reason: AccessReason | null }
   | { type: "post"; post: Post }
   | { type: "like"; id: string }
-  | { type: "comment"; id: string; comment: { id: string; name: string; text: string } }
+  | {
+      type: "comment";
+      id: string;
+      comment: { id: string; name: string; text: string };
+    }
   | { type: "follow"; id: string }
   | { type: "open-chat"; id: string }
   | { type: "close-chat" }
@@ -287,7 +296,10 @@ export type SocialAction =
 function toggle(list: string[], id: string) {
   return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
 }
-export function socialReducer(state: SocialState, action: SocialAction): SocialState {
+export function socialReducer(
+  state: SocialState,
+  action: SocialAction,
+): SocialState {
   switch (action.type) {
     case "subscription":
       return { ...state, paidCategory: action.category, gate: null };
@@ -295,7 +307,11 @@ export function socialReducer(state: SocialState, action: SocialAction): SocialS
       return { ...state, gate: action.reason };
     case "post": {
       const text = action.post.text.trim();
-      if (!text || text.length > 1200 || state.posts.some((p) => p.id === action.post.id))
+      if (
+        !text ||
+        text.length > 1200 ||
+        state.posts.some((p) => p.id === action.post.id)
+      )
         return state;
       return { ...state, posts: [{ ...action.post, text }, ...state.posts] };
     }
@@ -303,7 +319,9 @@ export function socialReducer(state: SocialState, action: SocialAction): SocialS
       return {
         ...state,
         posts: state.posts.map((p) =>
-          p.id === action.id ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) } : p,
+          p.id === action.id
+            ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) }
+            : p,
         ),
       };
     case "comment": {
@@ -312,7 +330,9 @@ export function socialReducer(state: SocialState, action: SocialAction): SocialS
       return {
         ...state,
         posts: state.posts.map((p) =>
-          p.id === action.id ? { ...p, comments: [...p.comments, { ...action.comment, text }] } : p,
+          p.id === action.id
+            ? { ...p, comments: [...p.comments, { ...action.comment, text }] }
+            : p,
         ),
       };
     }
@@ -327,8 +347,13 @@ export function socialReducer(state: SocialState, action: SocialAction): SocialS
         ...state,
         activeChat: action.id,
         conversations: exists
-          ? state.conversations.map((c) => (c.memberId === action.id ? { ...c, unread: false } : c))
-          : [{ memberId: action.id, unread: false, messages: [] }, ...state.conversations],
+          ? state.conversations.map((c) =>
+              c.memberId === action.id ? { ...c, unread: false } : c,
+            )
+          : [
+              { memberId: action.id, unread: false, messages: [] },
+              ...state.conversations,
+            ],
       };
     }
     case "close-chat":
@@ -366,9 +391,18 @@ export function matchesQuery(text: string, query: string) {
   return normalize(text).includes(normalize(query.trim()));
 }
 
-export type AccessReason = "publish" | "player-contact" | "receive" | "quota" | "recipient";
+export type AccessReason =
+  | "publish"
+  | "player-contact"
+  | "receive"
+  | "quota"
+  | "recipient";
 export type AccessFeature = "publish" | "message" | "comment" | "receive";
-export type AccessContext = { category: Category; month: string };
+export type AccessContext = {
+  category: Category;
+  month: string;
+  blocked?: string[];
+};
 export const FREE_MESSAGES = 5;
 // Fictional recipient plans, not subscription data from the real platform.
 export const unpaidRecipients = ["sam", "united"];
@@ -379,7 +413,9 @@ export function monthKey(date = new Date()) {
     month: "2-digit",
   }).formatToParts(date);
   return (
-    parts.find((p) => p.type === "year")!.value + "-" + parts.find((p) => p.type === "month")!.value
+    parts.find((p) => p.type === "year")!.value +
+    "-" +
+    parts.find((p) => p.type === "month")!.value
   );
 }
 export function isPremium(state: SocialState, category: Category) {
@@ -398,8 +434,10 @@ export function accessReason(
   targetId?: string,
 ): AccessReason | null {
   const premium = isPremium(state, context.category);
-  if (feature === "publish") return context.category === "Sportif" && !premium ? "publish" : null;
-  if (feature === "receive") return canReceive(state, context.category) ? null : "receive";
+  if (feature === "publish")
+    return context.category === "Sportif" && !premium ? "publish" : null;
+  if (feature === "receive")
+    return canReceive(state, context.category) ? null : "receive";
   const target = members.find((m) => m.id === targetId);
   if (target && unpaidRecipients.includes(target.id)) return "recipient";
   if (target?.kind === "Joueurs" && context.category !== "Sportif" && !premium)
@@ -422,10 +460,20 @@ export function visibleMessages(
     ? conversation.messages
     : conversation.messages.filter((m) => m.mine);
 }
-export function visibleComments(state: SocialState, context: AccessContext, post: Post) {
-  return post.author === "self" && !canReceive(state, context.category) ? [] : post.comments;
+export function visibleComments(
+  state: SocialState,
+  context: AccessContext,
+  post: Post,
+) {
+  return post.author === "self" && !canReceive(state, context.category)
+    ? []
+    : post.comments;
 }
-export function commentReason(state: SocialState, context: AccessContext, post: Post) {
+export function commentReason(
+  state: SocialState,
+  context: AccessContext,
+  post: Post,
+) {
   return post.author === "self"
     ? accessReason(state, context, "receive")
     : accessReason(state, context, "comment", post.author);
@@ -437,6 +485,20 @@ export function guardedSocialReducer(
   command: { action: SocialAction; context: AccessContext },
 ): SocialState {
   const { action, context } = command;
+  const text =
+    action.type === "message"
+      ? action.message.text
+      : action.type === "post"
+        ? action.post.text
+        : action.type === "comment"
+          ? action.comment.text
+          : "";
+  if (moderateText(text)) return state;
+  if (
+    (action.type === "message" || action.type === "open-chat") &&
+    context.blocked?.includes(action.id)
+  )
+    return state;
   let reason: AccessReason | null = null;
   if (action.type === "post") reason = accessReason(state, context, "publish");
   if (action.type === "message") {

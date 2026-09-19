@@ -1,5 +1,6 @@
 "use client";
 import { FreePlanNote } from "./subscription-ui";
+import { moderateText } from "@/lib/trust";
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,9 +15,20 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { useDemo } from "./demo-provider";
-import { AuthLayout, Field, Password, Submit, Guard, FormErrors, focusError } from "./studio-ui";
+import {
+  AuthLayout,
+  Field,
+  Password,
+  Submit,
+  Guard,
+  FormErrors,
+  focusError,
+} from "./studio-ui";
 import {
   DEMO_CODE,
   DEMO_PASSWORD,
@@ -33,10 +45,11 @@ import {
   type Category,
   type Issues,
 } from "@/lib/model";
-const value = (form: FormData, key: string) => String(form.get(key) || "").trim();
+const value = (form: FormData, key: string) =>
+  String(form.get(key) || "").trim();
 
 export function Signup() {
-  const { draft, setDraft, setEmailVerified } = useDemo();
+  const { draft, setDraft, setEmailVerified, dispatchTrust } = useDemo();
   const router = useRouter();
   const [errors, setErrors] = useState<Issues>({});
   function submit(e: FormEvent<HTMLFormElement>) {
@@ -47,10 +60,22 @@ export function Signup() {
       lastName: value(data, "lastName"),
       email: value(data, "email"),
     };
-    const issues = validateIdentity(identity, String(data.get("password") || ""));
+    const issues = validateIdentity(
+      identity,
+      String(data.get("password") || ""),
+    );
+    if (!data.get("policy"))
+      issues.policy = "Prenez connaissance de la notice de confidentialité.";
+    if (!data.get("accuracy"))
+      issues.accuracy =
+        "Confirmez l’exactitude des informations et le respect de la charte.";
+    if (moderateText(JSON.stringify(identity)))
+      issues.firstName = "Reformulez les informations de manière respectueuse.";
     setErrors(issues);
     focusError(issues);
     if (Object.keys(issues).length) return;
+    dispatchTrust({ type: "reset" });
+    dispatchTrust({ type: "consent", policy: true, accuracy: true });
     setDraft(createProfile(identity));
     setEmailVerified(false);
     e.currentTarget.reset();
@@ -107,6 +132,22 @@ export function Signup() {
           error={errors.email}
         />
         <Password error={errors.password} newPassword />
+        <div className="trust-consents">
+          <label>
+            <input id="policy" name="policy" type="checkbox" required />
+            J’ai pris connaissance de la{" "}
+            <Link href="/confidentialite" target="_blank" rel="noreferrer">
+              notice de confidentialité de la démo
+            </Link>
+            .
+          </label>
+          <label>
+            <input id="accuracy" name="accuracy" type="checkbox" required />
+            J’atteste l’exactitude de mes informations dans le service réel et
+            j’accepte la charte de respect. Pour cette démo, j’utilise
+            uniquement des données fictives.
+          </label>
+        </div>
         <div className="inline-note">
           <Mail size={18} />
           <span>
@@ -132,15 +173,22 @@ export function VerifyEmail() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [resends, setResends] = useState(0);
+  const [attempts, setAttempts] = useState(0);
+  const [expires, setExpires] = useState(() => Date.now() + 600000);
   if (!draft) return <Guard />;
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (attempts >= 5 || Date.now() > expires) {
+      setError("Code expiré ou trop de tentatives. Simulez un nouvel envoi.");
+      return;
+    }
+    setAttempts(attempts + 1);
     if (!validDemoCode(code)) {
       setError("Le code de démonstration est 246810.");
       return;
     }
     setEmailVerified(true);
-    router.push("/personnalisation");
+    router.push("/double-facteur");
   }
   return (
     <AuthLayout
@@ -196,6 +244,9 @@ export function VerifyEmail() {
         className="resend"
         onClick={() => {
           setResends(resends + 1);
+          setAttempts(0);
+          setExpires(Date.now() + 600000);
+          setError("");
           notify("Renvoi simulé : aucun e-mail envoyé. Le code reste 246810.");
         }}
       >
@@ -211,20 +262,47 @@ export function VerifyEmail() {
 }
 
 export function Personalise() {
-  const { draft, setDraft, emailVerified } = useDemo();
+  const { draft, setDraft, emailVerified, trust } = useDemo();
   const router = useRouter();
-  const [category, setCategory] = useState<Category>(draft?.category || "Sportif");
+  const [category, setCategory] = useState<Category>(
+    draft?.category || "Sportif",
+  );
   const [errors, setErrors] = useState<Issues>({});
   if (!draft) return <Guard />;
   if (!emailVerified) return <Guard verification />;
+  if (!trust.securityStep || !trust.policy || !trust.accuracy)
+    return (
+      <AuthLayout
+        title="Terminez la validation."
+        intro="Les validations de la démo sont nécessaires avant de poursuivre."
+      >
+        <Link
+          className="action primary"
+          href={trust.policy ? "/double-facteur" : "/inscription"}
+        >
+          Reprendre la validation
+        </Link>
+      </AuthLayout>
+    );
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const issues: Issues = {};
-    if (!value(data, "headline")) issues.headline = "Indiquez votre rôle dans le sport.";
+    if (!value(data, "headline"))
+      issues.headline = "Indiquez votre rôle dans le sport.";
     if (!value(data, "city")) issues.city = "Indiquez une ville fictive.";
     if (category === "Organisation" && !value(data, "organisation"))
       issues.organisation = "Indiquez le nom de l’organisation fictive.";
+    if (
+      moderateText(
+        [
+          value(data, "headline"),
+          value(data, "city"),
+          value(data, "organisation"),
+        ].join(" "),
+      )
+    )
+      issues.headline = "Utilisez des informations respectueuses.";
     setErrors(issues);
     focusError(issues);
     if (Object.keys(issues).length) return;
@@ -232,6 +310,15 @@ export function Personalise() {
       ...draft!,
       category,
       sport: value(data, "sport"),
+      disciplines: [
+        {
+          sport: value(data, "sport"),
+          level: value(data, "level"),
+          ranking: value(data, "ranking"),
+          federation: "",
+          clubs: [],
+        },
+      ],
       headline: value(data, "headline"),
       city: value(data, "city"),
       organisation: value(data, "organisation"),
@@ -241,7 +328,7 @@ export function Personalise() {
   const icons = [UserRound, BriefcaseBusiness, Building2];
   return (
     <AuthLayout
-      back="/verification"
+      back="/double-facteur"
       step={3}
       title={
         <>
@@ -286,7 +373,12 @@ export function Personalise() {
           />
         )}
         <Field label="Votre discipline" name="sport">
-          <NativeSelect id="sport" name="sport" defaultValue={draft.sport} className="select-field">
+          <NativeSelect
+            id="sport"
+            name="sport"
+            defaultValue={draft.sport}
+            className="select-field"
+          >
             {sports.map((s) => (
               <NativeSelectOption key={s} value={s}>
                 {s}
@@ -294,8 +386,35 @@ export function Personalise() {
             ))}
           </NativeSelect>
         </Field>
+        <Field label="Niveau dans cette discipline" name="level">
+          <NativeSelect id="level" name="level" defaultValue="Loisir">
+            {[
+              "Débutant",
+              "Loisir",
+              "Intermédiaire",
+              "Compétition",
+              "Professionnel",
+            ].map((l) => (
+              <NativeSelectOption key={l}>{l}</NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </Field>
         <Field
-          label={category === "Organisation" ? "Votre activité" : "Votre rôle ou spécialité"}
+          label="Classement (facultatif)"
+          name="ranking"
+          maxLength={80}
+          placeholder="Ex. P200 ou C15.2, pays et saison"
+        />
+        <p className="field-hint">
+          Vous pourrez ajouter d’autres sports, leurs niveaux et leurs clubs
+          dans Profil → Sports, niveaux & clubs.
+        </p>
+        <Field
+          label={
+            category === "Organisation"
+              ? "Votre activité"
+              : "Votre rôle ou spécialité"
+          }
           name="headline"
           defaultValue={draft.headline}
           autoComplete="organization-title"
@@ -325,18 +444,47 @@ export function Personalise() {
 }
 
 export function Presentation() {
-  const { draft, setDraft, emailVerified, setProfile, notify, dispatchSocial } = useDemo();
+  const {
+    draft,
+    setDraft,
+    emailVerified,
+    setProfile,
+    notify,
+    dispatchSocial,
+    trust,
+  } = useDemo();
   const router = useRouter();
   const [photo, setPhoto] = useState(draft?.photo || photos[0].src);
   const [bio, setBio] = useState(draft?.bio || "");
+  const [bioError, setBioError] = useState("");
   if (!draft) return <Guard />;
   if (!emailVerified) return <Guard verification />;
+  if (!trust.securityStep || !trust.policy || !trust.accuracy)
+    return (
+      <AuthLayout
+        title="Terminez la validation."
+        intro="Votre parcours d’inscription n’est pas terminé."
+      >
+        <Link
+          className="action primary"
+          href={trust.policy ? "/double-facteur" : "/inscription"}
+        >
+          Reprendre la validation
+        </Link>
+      </AuthLayout>
+    );
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (moderateText(bio)) {
+      setBioError("Reformulez votre présentation de manière respectueuse.");
+      return;
+    }
     setProfile({ ...draft!, bio: bio.trim(), photo });
     dispatchSocial({ type: "reset" });
     setDraft(null);
-    notify("Votre profil de démonstration est prêt. Aucun compte réel n’a été créé.");
+    notify(
+      "Votre profil de démonstration est prêt. Aucun compte réel n’a été créé.",
+    );
     router.push("/accueil");
   }
   return (
@@ -352,9 +500,16 @@ export function Presentation() {
       intro="Ajoutez une touche personnelle. Vous pourrez compléter le reste à votre rythme."
     >
       <form onSubmit={submit}>
+        {bioError && (
+          <p role="alert" className="event-error">
+            {bioError}
+          </p>
+        )}
         <fieldset className="photo-choices">
           <legend>Choisir une illustration de profil</legend>
-          <p className="field-hint">Personnages fictifs, images de démonstration.</p>
+          <p className="field-hint">
+            Personnages fictifs, images de démonstration.
+          </p>
           <div>
             {photos.slice(0, 4).map((p) => (
               <label key={p.src} className={photo === p.src ? "selected" : ""}>
@@ -389,7 +544,8 @@ export function Presentation() {
         <div className="ready-card">
           <Check size={19} />
           <span>
-            Le terrain est à vous.<small>Votre profil est prêt à être exploré.</small>
+            Le terrain est à vous.
+            <small>Votre profil est prêt à être exploré.</small>
           </span>
         </div>
         <Submit>Découvrir mon profil</Submit>
@@ -406,11 +562,16 @@ export function Login() {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const email = value(data, "email").toLowerCase();
-    const issues = validateDemoLogin(email, String(data.get("password") || ""), profile.email);
+    const issues = validateDemoLogin(
+      email,
+      String(data.get("password") || ""),
+      profile.email,
+    );
     setErrors(issues);
     focusError(issues);
     if (Object.keys(issues).length) return;
-    if (email !== profile.email.toLowerCase()) setProfile(structuredClone(initialProfile));
+    if (email !== profile.email.toLowerCase())
+      setProfile(structuredClone(initialProfile));
     e.currentTarget.reset();
     notify("Vous explorez une session fictive, sans authentification réelle.");
     router.push("/accueil");
@@ -448,7 +609,8 @@ export function Login() {
         <Submit>Se connecter à la démo</Submit>
       </form>
       <p className="switch-auth">
-        Pas encore de profil ? <Link href="/inscription">Créer un compte gratuit</Link>
+        Pas encore de profil ?{" "}
+        <Link href="/inscription">Créer un compte gratuit</Link>
       </p>
       <div className="demo-access">
         <span className="eyebrow">POUR ESSAYER EN UN CLIC</span>

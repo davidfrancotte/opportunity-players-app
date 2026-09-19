@@ -2,6 +2,21 @@
 
 19 septembre 2026.
 
+## Mise à jour : confiance et dossier multisport
+
+- 47 tests unitaires réussis : règles existantes et nouveaux contrôles de modération de démonstration, blocage, formats/tailles de fichiers, recherche sur une même discipline, avis professionnels, parrainage et consentements.
+- TypeScript et compilation de production réussis.
+- Recette Chrome automatisée à 390 px : création du parcours multisport avec club, confirmation réciproque d’agent simulée, document PDF en attente, rejet SVG, qualification de filleul et récompense, recherche tennis/padel, avis en attente puis publié puis contesté, message filtré sans envoi, signalement, blocage, inscription avec cases obligatoires puis e-mail et second code.
+- Absence de débordement horizontal à 320, 390 et 480 px sur Profil, Disciplines, Agent, Documents, Parrainage, Sécurité, Réseau, Inscription et Confidentialité. Correction du champ fichier à 320 px.
+- Captures examinées pour le profil et les filtres. Aucun nouvel incident JavaScript navigateur pendant la recette.
+- Non-régression matchs : invitations gratuites privées, accès Premium, création multi-créneaux, total avec +1, quorum, confirmation, agenda, notifications, message reçu et candidature à proximité.
+- Les parcours s’exécutent sur un navigateur de bureau avec viewport mobile ; pas de validation sur smartphone physique.
+- Export source actualisé sans push GitHub ni nouveau déploiement Netlify. Aucun contrôle automatique réel côté serveur ajouté : voir TRUST_SAFETY.md.
+
+## Historique de la livraison initiale
+
+Les vérifications suivantes décrivent la livraison initiale, avant les écrans de matchs et de confiance.
+
 - Compilation de production Next.js 16.3.5 : réussie, avec contrôle TypeScript.
 - Compilation officielle locale Netlify en contexte production : réussie ; adaptateur Next.js 5.16.0, Netlify Build 37.0.0, fonction serveur créée et empaquetée.
 - Vingt-sept tests unitaires : profil/authentification, interactions sociales, tarifs définitifs, restrictions Gratuit / Premium, sixième message refusé, changement de mois/année, compteurs multi-conversations, refus sans débit, réception et commentaires, abonnement par type de profil et réinitialisation.

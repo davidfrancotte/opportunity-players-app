@@ -25,6 +25,8 @@ export type Experience = {
   description: string;
 };
 export type Profile = {
+  disciplines: SportRecord[];
+  agent: AgentRecord;
   firstName: string;
   lastName: string;
   email: string;
@@ -51,6 +53,23 @@ export const photos = [
   { src: "/images/athletics-color.webp", label: "Le goût du dépassement" },
 ];
 export const initialProfile: Profile = {
+  disciplines: [
+    {
+      sport: "Padel",
+      level: "Compétition",
+      ranking: "P500 · exemple",
+      federation: "Belgique · déclaration fictive",
+      clubs: [
+        {
+          id: "club-initial",
+          name: "Club Horizon · fictif",
+          current: true,
+          period: "2023 — aujourd’hui",
+        },
+      ],
+    },
+  ],
+  agent: { name: "", memberId: "", status: "none" },
   firstName: "Alex",
   lastName: "Dupont",
   email: DEMO_EMAIL,
@@ -60,7 +79,8 @@ export const initialProfile: Profile = {
   sport: "Padel",
   city: "Liège, Belgique",
   bio: "Accompagner chaque joueur dans sa progression. Sur le terrain, je privilégie l’écoute, le plaisir de jouer et une technique qui fait la différence.",
-  objective: "Échanger avec des clubs et partager de nouvelles méthodes d’entraînement.",
+  objective:
+    "Échanger avec des clubs et partager de nouvelles méthodes d’entraînement.",
   skills: ["Pédagogie", "Technique", "Accompagnement"],
   experiences: [
     {
@@ -68,7 +88,8 @@ export const initialProfile: Profile = {
       title: "Coach de padel",
       organisation: "Club Horizon · fictif",
       period: "2023 — Aujourd’hui",
-      description: "Séances individuelles et collectives. Accompagnement de joueurs amateurs.",
+      description:
+        "Séances individuelles et collectives. Accompagnement de joueurs amateurs.",
     },
     {
       id: "experience-2",
@@ -86,19 +107,29 @@ export function validEmail(email: string) {
 }
 export function validateIdentity(identity: Identity, password: string): Issues {
   const errors: Issues = {};
-  if (!identity.firstName.trim()) errors.firstName = "Indiquez un prénom fictif.";
+  if (!identity.firstName.trim())
+    errors.firstName = "Indiquez un prénom fictif.";
   if (!identity.lastName.trim()) errors.lastName = "Indiquez un nom fictif.";
-  if (!validEmail(identity.email)) errors.email = "Indiquez une adresse au format nom@exemple.com.";
+  if (!validEmail(identity.email))
+    errors.email = "Indiquez une adresse au format nom@exemple.com.";
   if (password !== DEMO_PASSWORD)
     errors.password = `Pour cette démo, utilisez uniquement ${DEMO_PASSWORD}`;
   return errors;
 }
-export function validateDemoLogin(email: string, password: string, currentEmail: string): Issues {
+export function validateDemoLogin(
+  email: string,
+  password: string,
+  currentEmail: string,
+): Issues {
   const errors: Issues = {};
   const normalized = email.trim().toLowerCase();
   if (!validEmail(normalized)) errors.email = "Indiquez une adresse valide.";
-  else if (normalized !== DEMO_EMAIL && normalized !== currentEmail.toLowerCase())
-    errors.email = "Utilisez alex@demo.example ou l’adresse du profil créé pendant cette visite.";
+  else if (
+    normalized !== DEMO_EMAIL &&
+    normalized !== currentEmail.toLowerCase()
+  )
+    errors.email =
+      "Utilisez alex@demo.example ou l’adresse du profil créé pendant cette visite.";
   if (password !== DEMO_PASSWORD)
     errors.password = "Le mot de passe de démonstration est ArenaDemo2026!";
   return errors;
@@ -110,13 +141,17 @@ export function validateProfile(profile: Profile): Issues {
   const errors: Issues = {};
   if (!profile.firstName.trim()) errors.firstName = "Le prénom est requis.";
   if (!profile.lastName.trim()) errors.lastName = "Le nom est requis.";
-  if (!categories.includes(profile.category)) errors.category = "Choisissez un type de profil.";
+  if (!categories.includes(profile.category))
+    errors.category = "Choisissez un type de profil.";
   if (profile.category === "Organisation" && !profile.organisation.trim())
     errors.organisation = "Indiquez le nom de votre organisation fictive.";
-  if (!profile.headline.trim()) errors.headline = "Décrivez votre rôle dans le sport.";
-  if (!sports.includes(profile.sport)) errors.sport = "Choisissez une discipline.";
+  if (!profile.headline.trim())
+    errors.headline = "Décrivez votre rôle dans le sport.";
+  if (!sports.includes(profile.sport))
+    errors.sport = "Choisissez une discipline.";
   if (!profile.city.trim()) errors.city = "Indiquez une ville.";
-  if (profile.bio.length > 600) errors.bio = "Limitez la présentation à 600 caractères.";
+  if (profile.bio.length > 600)
+    errors.bio = "Limitez la présentation à 600 caractères.";
   return errors;
 }
 export function createProfile(identity: Identity): Profile {
@@ -134,6 +169,8 @@ export function createProfile(identity: Identity): Profile {
     objective: "",
     skills: [],
     experiences: [],
+    disciplines: [],
+    agent: { name: "", memberId: "", status: "none" },
     media: [],
   };
 }
@@ -154,7 +191,11 @@ export function completion(profile: Profile) {
     { label: "Parcours", done: profile.experiences.length > 0 },
     { label: "Médias", done: profile.media.length > 0 },
   ];
-  return { items, count: items.filter((x) => x.done).length, total: items.length };
+  return {
+    items,
+    count: items.filter((x) => x.done).length,
+    total: items.length,
+  };
 }
 export function cvText(profile: Profile) {
   return [
@@ -170,6 +211,29 @@ export function cvText(profile: Profile) {
     "COMPÉTENCES",
     profile.skills.join(" · ") || "À compléter",
     "",
+    "DISCIPLINES ET CLUBS · INFORMATIONS DÉCLARÉES",
+    ...profile.disciplines.flatMap((r) => [
+      r.sport + " · " + r.level + " · " + r.ranking,
+      r.federation,
+      ...r.clubs.map(
+        (c) =>
+          c.name +
+          " · " +
+          c.period +
+          " · " +
+          (c.current ? "Club actuel" : "Ancien club"),
+      ),
+      "",
+    ]),
+    "AGENT",
+    profile.agent.status === "none"
+      ? "Aucun agent déclaré"
+      : profile.agent.name +
+        " · " +
+        (profile.agent.status === "confirmed"
+          ? "Confirmation simulée"
+          : "Relation déclarée, non vérifiée"),
+    "",
     "PARCOURS",
     ...profile.experiences.flatMap((x) => [
       x.title,
@@ -180,3 +244,4 @@ export function cvText(profile: Profile) {
     "Document généré localement. Ne constitue pas le CV d’une personne réelle.",
   ].join("\n");
 }
+import type { SportRecord, AgentRecord } from "./trust";

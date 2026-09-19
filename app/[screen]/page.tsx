@@ -2,6 +2,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { StudioScreen } from "@/components/studio-screen";
 const titles: Record<string, string> = {
+  disciplines: "Sports, niveaux et clubs",
+  agent: "Mon agent",
+  documents: "CV et références",
+  securite: "Sécurité et modération",
+  parrainage: "Inviter mon réseau",
+  confidentialite: "Confidentialité et charte",
+  "double-facteur": "Seconde validation",
   accueil: "Accueil",
   reseau: "Mon réseau",
   jouer: "Jouer ensemble",
@@ -36,7 +43,11 @@ export async function generateMetadata({
   const { screen } = await params;
   return { title: `${titles[screen] || "Page introuvable"} — Arena Studio` };
 }
-export default async function Page({ params }: { params: Promise<{ screen: string }> }) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ screen: string }>;
+}) {
   const { screen } = await params;
   if (!titles[screen]) notFound();
   return <StudioScreen screen={screen} />;

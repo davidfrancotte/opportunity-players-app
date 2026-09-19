@@ -50,6 +50,11 @@ export function SubscriptionPage() {
             : "Votre présence est créée. Donnez maintenant vie aux échanges."}
         </p>
       </div>
+      <Link href="/parrainage" className="trust-card">
+        <span className="mini-kicker">INVITEZ VOTRE RÉSEAU</span>
+        <strong>3 mois Premium par filleul qualifié</strong>
+        <small>Découvrez le parrainage · offre et activation simulées.</small>
+      </Link>
       <div className="subscription-current">
         <span>
           {categoryLabel(profile.category)} ·{" "}

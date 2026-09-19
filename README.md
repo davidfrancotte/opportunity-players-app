@@ -26,7 +26,13 @@ npm start
 - Conversations : `/messages`.
 - Marketplace d’opportunités : `/opportunities`.
 - Offre Gratuit / Premium et simulation d’abonnement : `/abonnement`.
-- Inscription en quatre étapes : `/inscription` → `/verification` → `/personnalisation` → `/presentation` → `/accueil`.
+- Inscription : `/inscription` (notice et attestation) → `/verification` → `/double-facteur` → `/personnalisation` → `/presentation` → `/accueil`.
+- Dossier sportif multisport : `/disciplines`, niveaux/classements et clubs actuels/passés par sport.
+- Agent : `/agent`, déclaration, profil lié et confirmation réciproque simulée.
+- CV, références PDF et photos : `/documents`, métadonnées locales, fichiers toujours non publiés.
+- Signalements, blocages et contrôle de démonstration : `/securite`.
+- Parrainage : `/parrainage`, trois mois Premium simulés par filleul qualifié.
+- Notice de démonstration et charte : `/confidentialite`.
 - Connexion : `/connexion`.
 - Récupération simulée : `/mot-de-passe-oublie`.
 - Profil et édition : `/profil`, `/modifier-profil`.
@@ -36,6 +42,20 @@ npm start
 Identifiants **publics, fictifs et sans valeur d’authentification** : `alex@demo.example` / `ArenaDemo2026!`. Le code de vérification de démonstration est `246810`. Un profil créé pendant la visite peut aussi être ouvert avec son adresse et le même mot de passe de démonstration. Il ne s’agit pas de comptes protégés.
 
 Les étapes intermédiaires invitent à recommencer si elles sont ouvertes directement sans parcours en cours. Le profil fictif d’Alex reste accessible directement pour les démonstrations.
+
+La seconde validation utilise le code public **135790** : aucune application d’authentification ni secret TOTP n’est configuré. Le code e-mail reste **246810**. Vérifier une adresse e-mail n’est pas, à lui seul, une authentification multifacteur.
+
+## Nouveautés confiance et parcours sportif
+
+Les filtres de recherche combinent sport, niveau, classement et club sur une même discipline. Les fiches de Léa et Noah illustrent plusieurs sports. Le lien déclaré avec un agent reste explicitement non vérifié jusqu’à la confirmation de démonstration.
+
+Les professionnels Premium peuvent déposer un avis sur une expérience précise d’un joueur, en attestant leur relation. L’avis reste en attente de modération. Les simulations de validation sont isolées et étiquetées ; les avis contestés sortent du score. Les notes professionnelles, distinctes des classements déclarés, sont calculées séparément par sport.
+
+Le filtre de texte local reconnaît quelques expressions et les marqueurs sûrs `[TEST RACISME]`, `[TEST SEXISME]`, `[TEST MENACE]` et `[TEST HARCELEMENT]`. Il intercepte messages entrants/sortants, posts et commentaires, sans consommer le quota. **Ce n’est pas une IA ni une protection de production.** Les signalements et notifications restent locaux.
+
+Les fichiers sélectionnés ne sont pas téléversés. Seules leurs métadonnées sont conservées dans la session ; format et taille sont contrôlés, et les documents PDF doivent présenter leur en-tête. Tout reste en attente. Aucune reconnaissance du caractère sportif d’une image n’est effectuée dans cette démo.
+
+Le parrainage vérifie les étapes simulées (e-mail, profil, première connexion), refuse doublons/auto-parrainage exact et crédite une fois par filleul. L’activation Premium n’a aucun effet commercial. Voir [TRUST_SAFETY.md](TRUST_SAFETY.md) pour les conditions de passage en production.
 
 ## Fonctionnalités
 

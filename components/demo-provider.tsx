@@ -23,6 +23,13 @@ import { X, Check } from "lucide-react";
 import Link from "next/link";
 import { isPremium } from "@/lib/social";
 import {
+  createTrustState,
+  trustReducer,
+  moderateText,
+  type TrustState,
+  type TrustAction,
+} from "@/lib/trust";
+import {
   createEventState,
   eventReducer,
   profileCity,
@@ -30,6 +37,8 @@ import {
   type EventState,
 } from "@/lib/events";
 type Context = {
+  trust: TrustState;
+  dispatchTrust: Dispatch<TrustAction>;
   events: EventState;
   dispatchEvent: (action: EventAction) => void;
   profile: Profile;
@@ -53,6 +62,11 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<Profile | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [notice, setNotice] = useState("");
+  const [trust, dispatchTrust] = useReducer(
+    trustReducer,
+    undefined,
+    createTrustState,
+  );
   const [month, setMonth] = useState(() => monthKey());
   useEffect(() => {
     const refresh = () => setMonth(monthKey());
@@ -107,9 +121,37 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   }, [events.banner]);
   const access = { category: profile.category, month };
   function dispatchSocial(action: SocialAction) {
+    const content =
+      action.type === "message"
+        ? action.message.text
+        : action.type === "post"
+          ? action.post.text
+          : action.type === "comment"
+            ? action.comment.text
+            : "";
+    const reason = moderateText(content);
+    if (reason) {
+      dispatchEvent({
+        type: "safety-notice",
+        text: `Contenu non transmis : ${reason.toLowerCase()}. Filtre de démonstration ; vous pouvez demander une révision dans Sécurité.`,
+      });
+      setNotice("Contenu bloqué dans la démo. Aucun envoi ni quota consommé.");
+      return;
+    }
+    if (
+      (action.type === "message" || action.type === "open-chat") &&
+      trust.blocked.includes(action.id)
+    ) {
+      setNotice("Ce membre est bloqué. Gérez vos blocages dans Sécurité.");
+      return;
+    }
     dispatch({
       action,
-      context: { category: profile.category, month: monthKey() },
+      context: {
+        category: profile.category,
+        month: monthKey(),
+        ...{ blocked: trust.blocked },
+      },
     });
     if (
       action.type === "message" &&
@@ -140,11 +182,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setEmailVerified(false);
     dispatchSocial({ type: "reset" });
     dispatchEvent({ type: "reset" });
+    dispatchTrust({ type: "reset" });
     setNotice("La démo a été réinitialisée.");
   }
   return (
     <DemoContext.Provider
       value={{
+        trust,
+        dispatchTrust,
         events,
         dispatchEvent,
         profile,
