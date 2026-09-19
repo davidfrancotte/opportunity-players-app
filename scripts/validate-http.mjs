@@ -5,6 +5,11 @@ const routes = [
   "/",
   "/accueil",
   "/reseau",
+  "/jouer",
+  "/organiser",
+  "/match",
+  "/agenda",
+  "/notifications",
   "/messages",
   "/opportunities",
   "/abonnement",
@@ -36,6 +41,11 @@ for (const route of routes) {
     "/abonnement",
     "/accueil",
     "/reseau",
+    "/jouer",
+    "/organiser",
+    "/match",
+    "/agenda",
+    "/notifications",
     "/messages",
     "/opportunities",
     "/profil",
@@ -50,7 +60,7 @@ for (const route of routes) {
     for (const href of ["/accueil", "/reseau", "/messages", "/opportunities", "/profil"])
       assert.ok(nav[1].includes(`href="${href}"`), route + ": " + href);
     const active = [...nav[1].matchAll(/<a [^>]*aria-current="page"[^>]*>/g)];
-    assert.equal(active.length, 1, route + ": one active destination");
+    assert.equal(active.length, route === "/notifications" ? 0 : 1, route + ": active destination");
     const expected = [
       "/modifier-profil",
       "/parcours",
@@ -59,8 +69,8 @@ for (const route of routes) {
       "/abonnement",
     ].includes(route)
       ? "/profil"
-      : route;
-    assert.ok(active[0][0].includes(`href="${expected}"`));
+      : ["/jouer", "/organiser", "/match", "/agenda"].includes(route) ? "/reseau" : route;
+    if (route !== "/notifications") assert.ok(active[0][0].includes(`href="${expected}"`));
   } else assert.equal(nav, null, route + ": onboarding without profile navigation");
   if (["/parcours", "/medias"].includes(route)) {
     assert.ok(

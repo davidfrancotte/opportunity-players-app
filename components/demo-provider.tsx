@@ -20,7 +20,18 @@ import {
 } from "@/lib/social";
 import { initialProfile, type Profile } from "@/lib/model";
 import { X, Check } from "lucide-react";
+import Link from "next/link";
+import { isPremium } from "@/lib/social";
+import {
+  createEventState,
+  eventReducer,
+  profileCity,
+  type EventAction,
+  type EventState,
+} from "@/lib/events";
 type Context = {
+  events: EventState;
+  dispatchEvent: (action: EventAction) => void;
   profile: Profile;
   setProfile: (p: Profile) => void;
   draft: Profile | null;
@@ -36,7 +47,9 @@ type Context = {
 };
 const DemoContext = createContext<Context | null>(null);
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<Profile>(structuredClone(initialProfile));
+  const [profile, setProfile] = useState<Profile>(
+    structuredClone(initialProfile),
+  );
   const [draft, setDraft] = useState<Profile | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [notice, setNotice] = useState("");
@@ -50,10 +63,66 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", refresh);
     };
   }, []);
-  const [social, dispatch] = useReducer(guardedSocialReducer, undefined, createSocialState);
+  const [social, dispatch] = useReducer(
+    guardedSocialReducer,
+    undefined,
+    createSocialState,
+  );
+  const [events, eventDispatch] = useReducer(
+    eventReducer,
+    undefined,
+    createEventState,
+  );
+  function dispatchEvent(action: EventAction) {
+    eventDispatch({
+      action,
+      context: {
+        premium: isPremium(social, profile.category),
+        city: profileCity(profile.city),
+        now: Date.now(),
+      },
+    });
+  }
+  useEffect(() => {
+    const tick = () =>
+      eventDispatch({
+        action: { type: "tick" },
+        context: { premium: false, city: "", now: Date.now() },
+      });
+    tick();
+    const timer = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    if (!events.banner) return;
+    const timer = window.setTimeout(
+      () =>
+        eventDispatch({
+          action: { type: "dismiss" },
+          context: { premium: false, city: "", now: Date.now() },
+        }),
+      8000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [events.banner]);
   const access = { category: profile.category, month };
   function dispatchSocial(action: SocialAction) {
-    dispatch({ action, context: { category: profile.category, month: monthKey() } });
+    dispatch({
+      action,
+      context: { category: profile.category, month: monthKey() },
+    });
+    if (
+      action.type === "message" &&
+      !action.message.mine &&
+      action.message.text.trim() &&
+      action.message.text.length <= 1000 &&
+      !accessReason(
+        social,
+        { category: profile.category, month: monthKey() },
+        "receive",
+      )
+    )
+      dispatchEvent({ type: "demo-message" });
   }
   function requestAccess(feature: AccessFeature, targetId?: string) {
     const reason = accessReason(
@@ -70,11 +139,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setDraft(null);
     setEmailVerified(false);
     dispatchSocial({ type: "reset" });
+    dispatchEvent({ type: "reset" });
     setNotice("La démo a été réinitialisée.");
   }
   return (
     <DemoContext.Provider
       value={{
+        events,
+        dispatchEvent,
         profile,
         setProfile,
         draft,
@@ -90,12 +162,38 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {events.banner &&
+        events.notices
+          .filter((n) => n.id === events.banner && n.recipient === "me")
+          .map((n) => (
+            <aside className="event-banner" key={n.id} role="status">
+              <Link
+                href={n.href}
+                onClick={() => {
+                  dispatchEvent({ type: "read", id: n.id });
+                  dispatchEvent({ type: "dismiss" });
+                }}
+              >
+                <small>OP / NOTIFICATION DÉMO</small>
+                <strong>{n.text}</strong>
+              </Link>
+              <button
+                aria-label="Fermer la bannière"
+                onClick={() => dispatchEvent({ type: "dismiss" })}
+              >
+                <X size={18} />
+              </button>
+            </aside>
+          ))}
       <div className="toast-region" aria-live="polite" aria-atomic="true">
         {notice && (
           <div className="toast">
             <Check size={17} />
             <span>{notice}</span>
-            <button aria-label="Fermer la notification" onClick={() => setNotice("")}>
+            <button
+              aria-label="Fermer la notification"
+              onClick={() => setNotice("")}
+            >
               <X size={16} />
             </button>
           </div>

@@ -4,6 +4,11 @@ import { StudioScreen } from "@/components/studio-screen";
 const titles: Record<string, string> = {
   accueil: "Accueil",
   reseau: "Mon réseau",
+  jouer: "Jouer ensemble",
+  organiser: "Organiser un match",
+  match: "Votre match",
+  agenda: "Mon agenda",
+  notifications: "Notifications",
   messages: "Messages",
   opportunities: "Opportunities",
   abonnement: "Mon abonnement",

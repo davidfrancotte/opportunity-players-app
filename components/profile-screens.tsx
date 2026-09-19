@@ -33,7 +33,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useDemo } from "./demo-provider";
 import { PlanStatus } from "./subscription-ui";
-import { Brand, DemoPill, Field, Submit, FormErrors, focusError } from "./studio-ui";
+import { EventHeader } from "./event-navigation";
+import { Brand, Field, Submit, FormErrors, focusError } from "./studio-ui";
 import {
   photos,
   sports,
@@ -65,7 +66,7 @@ function BottomNav() {
     "/abonnement",
   ].includes(pathname)
     ? "/profil"
-    : pathname;
+    : ["/jouer", "/organiser", "/match", "/agenda"].includes(pathname) ? "/reseau" : pathname;
   return (
     <nav className="bottom-nav" aria-label="Navigation de l’application">
       {navigation.map(({ href, label, icon: Icon }) => (
@@ -99,7 +100,7 @@ export function ProfileLayout({
       <header className="app-header">
         <Brand href="/accueil" />
         <div className="header-right">
-          <DemoPill />
+          <EventHeader />
           {back ? (
             <Link href={back} className="icon-link" aria-label="Retour au profil">
               <ArrowLeft size={21} />

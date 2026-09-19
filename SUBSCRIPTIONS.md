@@ -28,6 +28,12 @@ Interprétations explicitement retenues :
 
 ## Conversion
 
+### Matchs et invitations
+
+Créer un match et découvrir les invitations ouvertes à moins de 50 km sont réservés aux abonnés, pour les trois types de compte. Les prix mensuels ne changent pas. Un membre gratuit peut répondre à une invitation personnelle et consulter les matchs auxquels il a déjà été accepté ; ces réponses ne consomment pas son quota de messages. Une candidature publique en attente ne rend pas le match public accessible après retour au gratuit. Les matchs déjà organisés restent gérables pour ne pas abandonner leurs participants.
+
+Les règles sont vérifiées dans `lib/events.ts`, y compris les liens directs. Comme toutes les données sont incluses dans cette démo cliente, ce contrôle ne protège aucune donnée réelle et doit être reproduit par une API authentifiée en production.
+
 - Inscription gratuite avec droits lisibles avant de terminer.
 - Encarts de statut et prix liés au profil, au fil et à la messagerie.
 - Fenêtres Premium déclenchées par une action précise, jamais au chargement par défaut.

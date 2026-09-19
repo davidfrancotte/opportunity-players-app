@@ -5,6 +5,7 @@ import './brand-mark.css';
 import "./mobile-app.css";
 import "./social.css";
 import "./subscription.css";
+import "./events.css";
 import { UpgradeGate } from "@/components/subscription-ui";
 import { DemoProvider } from "@/components/demo-provider";
 

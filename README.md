@@ -96,7 +96,25 @@ La compilation officielle de Netlify peut être testée localement sans publier 
 npx --yes netlify-cli build --offline --context production
 ```
 
-Les 27 tests unitaires couvrent le profil, les interactions sociales, les tarifs, les droits Gratuit / Premium, le quota mensuel, les destinataires bloqués, la réception masquée et la réinitialisation. Les contrôles HTTP couvrent les 17 écrans et les cinq destinations de navigation, ainsi que l’absence de rendu des messages reçus dans le compte professionnel gratuit. Ils ne remplacent pas une recette visuelle et des interactions sur de vrais appareils.
+Les tests unitaires couvrent le profil, les interactions sociales, les tarifs, les droits Gratuit / Premium, le quota mensuel, les destinataires bloqués, la réception masquée, les matchs et la réinitialisation. Les contrôles HTTP couvrent les 22 écrans et les cinq destinations de navigation, ainsi que l’absence de rendu des messages reçus dans le compte professionnel gratuit. Ils ne remplacent pas une recette visuelle et des interactions sur de vrais appareils.
+
+## Jouer ensemble, agenda et notifications
+
+La rubrique **Réseau → Jouer ensemble** regroupe les invitations personnelles, les matchs organisés et les invitations ouvertes à proximité. L’accueil propose un raccourci de création et le prochain match confirmé. L’agenda et les notifications sont accessibles dans l’en-tête ; les cinq onglets du bas sont conservés.
+
+- Création et découverte des invitations ouvertes : Premium pour toutes les catégories (2,99 € / 14,99 € / 29,99 € par mois).
+- Réponse à une invitation personnelle : gratuite, hors quota de messages.
+- Un match propose 1 à 6 créneaux ; chaque invité peut choisir plusieurs dates et un +1 par date. Un bouton permet de créer un autre match similaire avec de nouvelles dates.
+- Les seuils désignent un **total de participants**, organisateur inclus s’il joue, et amis +1 compris. Minimum et capacité maximale sont modifiables. Les suggestions par sport sont des paramètres produit, pas des règles fédérales.
+- Une candidature externe reste hors comptage jusqu’à acceptation. Le quorum déclenche une alerte mais jamais une confirmation automatique. La confirmation de l’organisateur ferme les autres propositions et génère les notifications des destinataires.
+- Les notifications des autres membres sont conservées dans le modèle de simulation, pas envoyées. Le compte courant voit uniquement ses propres notifications. Les préférences permettent de désactiver les bannières et rappels.
+- Les rappels sont vérifiés toutes les 30 secondes tant que la démo est ouverte : moins de 24 h, puis moins de 2 h, sans doublons. Aucune notification système en arrière-plan, aucun e-mail ni push réel.
+- Le rayon de 50 km utilise la distance entre centres de sept villes belges de démonstration. L’adresse saisie n’est pas géocodée ; elle est masquée pour les candidats non acceptés. Aucune localisation du téléphone n’est demandée.
+- Un désistement retire aussi le +1 et alerte l’organisateur si le minimum n’est plus atteint. Le match n’est pas annulé automatiquement ; l’organisateur peut l’annuler et organiser un remplacement.
+
+Pour tester : répondre à l’invitation de Noah en gratuit ; activer Premium dans Abonnement ; créer un match ; utiliser « Tester les réponses · simulation » pour simuler les autres participants ; confirmer le créneau ; consulter Agenda et Notifications. Les préférences de Notifications permettent aussi de simuler une invitation ou un message reçu.
+
+Code : `lib/events.ts`, `components/play-screens.tsx`, `components/event-navigation.tsx`, `app/events.css`. Tests : `scripts/events.test.mjs`. Tout est en mémoire et disparaît au rechargement. Avant production : comptes authentifiés, abonnement vérifié côté serveur, stockage, géocodage des lieux, transactions empêchant les doubles réservations, modération, règles mineurs/confidentialité et moteur de notifications avec consentement.
 
 ## Architecture et visuels
 

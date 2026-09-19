@@ -1,0 +1,107 @@
+"use client";
+import Link from "next/link";
+import { Bell, CalendarDays, ArrowUpRight } from "lucide-react";
+import { useDemo } from "./demo-provider";
+export function EventHeader() {
+  const { events } = useDemo();
+  const unread = events.notices.filter(
+    (n) => n.recipient === "me" && !n.read,
+  ).length;
+  return (
+    <div className="event-header">
+      <Link href="/agenda" className="icon-link" aria-label="Mon agenda">
+        <CalendarDays size={21} />
+      </Link>
+      <Link
+        href="/notifications"
+        className="icon-link event-bell"
+        aria-label={`Notifications, ${unread} non lues`}
+      >
+        <Bell size={21} />
+        {unread > 0 && <span>{unread > 9 ? "9+" : unread}</span>}
+      </Link>
+    </div>
+  );
+}
+export function NetworkSections({
+  active = "members",
+}: {
+  active?: "members" | "play";
+}) {
+  return (
+    <nav className="network-sections" aria-label="Rubriques du réseau">
+      <Link
+        href="/reseau"
+        aria-current={active === "members" ? "page" : undefined}
+      >
+        Les membres
+      </Link>
+      <Link href="/jouer" aria-current={active === "play" ? "page" : undefined}>
+        Jouer ensemble <span>NEW</span>
+      </Link>
+    </nav>
+  );
+}
+export function PlayHomeCard() {
+  const { events } = useDemo();
+  const upcoming = events.matches
+    .filter(
+      (m) =>
+        m.confirmed &&
+        !m.cancelled &&
+        (m.host === "me" ||
+          m.replies.some(
+            (r) =>
+              r.user === "me" &&
+              r.status === "approved" &&
+              r.slots.includes(m.confirmed!),
+          )),
+    )
+    .map((m) => ({ m, slot: m.slots.find((s) => s.id === m.confirmed)! }))
+    .filter(({ slot }) => Date.parse(slot.start) > Date.now())
+    .sort((a, b) => Date.parse(a.slot.start) - Date.parse(b.slot.start))[0];
+  const invitations = events.matches.filter(
+    (m) =>
+      m.invitees.includes("me") &&
+      !m.cancelled &&
+      !m.confirmed &&
+      !m.replies.some((r) => r.user === "me"),
+  ).length;
+  return (
+    <section className="play-home">
+      <span className="mini-kicker">DU RÉSEAU AU TERRAIN</span>
+      <div>
+        <h2>On joue quand ?</h2>
+        <CalendarDays size={27} />
+      </div>
+      <p>Un sport. Vos contacts. Le bon créneau.</p>
+      <div className="play-home-links">
+        <Link href="/organiser">
+          Organiser un match <ArrowUpRight size={17} />
+        </Link>
+        <Link href="/jouer">
+          {invitations
+            ? `${invitations} invitation à découvrir`
+            : "Trouver un match"}
+        </Link>
+      </div>
+      {upcoming && (
+        <Link className="play-upcoming" href={`/match?id=${upcoming.m.id}`}>
+          <small>PROCHAIN RENDEZ-VOUS</small>
+          <strong>{upcoming.m.title}</strong>
+          <span>
+            {new Intl.DateTimeFormat("fr-BE", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Europe/Brussels",
+            }).format(new Date(upcoming.slot.start))}{" "}
+            · {upcoming.m.city}
+          </span>
+        </Link>
+      )}
+    </section>
+  );
+}
