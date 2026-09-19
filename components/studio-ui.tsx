@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 export function Brand({ href = "/" }: { href?: string }) {
   return (
     <Link href={href} className="brand" aria-label="Opportunity Players — accueil">
-      op<span>↗</span>
+      op<i className="op-angle" aria-hidden="true" />
       <small>Opportunity Players</small>
     </Link>
   );

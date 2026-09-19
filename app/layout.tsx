@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
+import './brand-mark.css';
 import "./mobile-app.css";
 import "./social.css";
 import "./subscription.css";

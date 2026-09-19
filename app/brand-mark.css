@@ -1,0 +1,14 @@
+/* Approved OP / Angle ouvert. Letterforms, weights and tracking stay unchanged. */
+.op-angle {
+  display: inline-block;
+  box-sizing: border-box;
+  width: .15em;
+  height: .15em;
+  margin-left: .14em;
+  border-top: .048em solid #d1f94c;
+  border-right: .048em solid #d1f94c;
+  vertical-align: .34em;
+  font-style: normal;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
