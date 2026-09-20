@@ -79,7 +79,8 @@ function BottomNav() {
     ? "/profil"
     : ["/jouer", "/organiser", "/match", "/agenda"].includes(pathname)
       ? "/reseau"
-      : pathname;
+      : ["/candidatures", "/recrutement"].includes(pathname) ? "/opportunities"
+      : pathname === "/rendez-vous" ? "/reseau" : pathname;
   return (
     <nav className="bottom-nav" aria-label="Navigation de l’application">
       {navigation.map(({ href, label, icon: Icon }) => (

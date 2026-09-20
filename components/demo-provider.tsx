@@ -1,5 +1,13 @@
 "use client";
-import { LocaleProvider } from "./locale";
+import { LocaleProvider, useLocale } from "./locale";
+import {
+  createCareerState,
+  careerReducer,
+  careerActors,
+  type CareerAction,
+  type CareerState,
+  type Actor,
+} from "@/lib/career";
 import {
   createContext,
   useContext,
@@ -39,6 +47,11 @@ import {
   type EventState,
 } from "@/lib/events";
 type Context = {
+  career: CareerState;
+  dispatchCareer: (action: CareerAction) => void;
+  careerActor: Actor;
+  careerActors: Actor[];
+  setCareerActor: (id: string) => void;
   trust: TrustState;
   dispatchTrust: Dispatch<TrustAction>;
   events: EventState;
@@ -65,6 +78,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   );
 }
 function DemoStateProvider({ children }: { children: ReactNode }) {
+  const { locale } = useLocale();
   const [profile, setProfile] = useState<Profile>(structuredClone(initialProfile));
   const videoURLs = useRef<string[]>([]);
   useEffect(() => {
@@ -91,6 +105,28 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
   }, []);
   const [social, dispatch] = useReducer(guardedSocialReducer, undefined, createSocialState);
   const [events, eventDispatch] = useReducer(eventReducer, undefined, createEventState);
+  const [career, careerDispatch] = useReducer(careerReducer, undefined, createCareerState);
+  const [careerActorId, setCareerActor] = useState("self");
+  const actors = careerActors(profile, isPremium(social, profile.category));
+  const careerActor = actors.find((a) => a.id === careerActorId) || actors[0];
+  const seenCareerNotices = useRef(new Set<string>());
+  useEffect(() => {
+    const latest = career.notices.find(
+      (n) => n.recipient === careerActor.id && !n.read && !seenCareerNotices.current.has(n.id),
+    );
+    if (latest) {
+      career.notices
+        .filter((n) => n.recipient === careerActor.id)
+        .forEach((n) => seenCareerNotices.current.add(n.id));
+      setNotice(locale === "fr" ? latest.fr : latest.en);
+    }
+  }, [career.notices, careerActor.id, locale]);
+  function dispatchCareer(action: CareerAction) {
+    careerDispatch({
+      action,
+      context: { actor: careerActor, actors, blocked: trust.blocked, now: Date.now() },
+    });
+  }
   function dispatchEvent(action: EventAction) {
     eventDispatch({
       action,
@@ -177,6 +213,9 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
     return !reason;
   }
   function reset() {
+    dispatchCareer({ type: "reset" });
+    setCareerActor("self");
+    seenCareerNotices.current.clear();
     setProfile(structuredClone(initialProfile));
     setDraft(null);
     setEmailVerified(false);
@@ -188,6 +227,11 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
   return (
     <DemoContext.Provider
       value={{
+        career,
+        dispatchCareer,
+        careerActor,
+        careerActors: actors,
+        setCareerActor,
         trust,
         dispatchTrust,
         events,

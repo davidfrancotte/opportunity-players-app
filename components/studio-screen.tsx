@@ -1,4 +1,5 @@
 "use client";
+import { ApplicationsPage, RecruitmentPage, AppointmentsPage } from "./career-screens";
 import { SportsPortfolioPage } from "./sport-portfolio";
 import { Suspense } from "react";
 import {
@@ -30,6 +31,9 @@ import {
 } from "./play-screens";
 export function StudioScreen({ screen }: { screen: string }) {
   switch (screen) {
+    case "candidatures": return <ApplicationsPage />;
+    case "recrutement": return <RecruitmentPage />;
+    case "rendez-vous": return <AppointmentsPage />;
     case "dossier-sportif":
       return <SportsPortfolioPage />;
     case "disciplines":

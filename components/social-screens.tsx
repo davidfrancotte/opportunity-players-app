@@ -1,4 +1,5 @@
 "use client";
+import { PersonalizedRecommendations, CareerNav, ApplyButton, AppointmentRequestButton } from "./career-screens";
 import { T } from "./locale";
 import Link from "next/link";
 import { ExtraDirectoryFilters } from "./sport-profile-fields";
@@ -171,6 +172,7 @@ export function FeedPage() {
       </div>
       <PlanStatus compact />
       <PlayHomeCard />
+      <PersonalizedRecommendations />
       <button
         type="button"
         className="compose-launch"
@@ -752,6 +754,7 @@ export function NetworkPage() {
             <p>{member.bio}</p>
             <MemberDossier key={member.id} member={member} />
             <SafetyActions memberId={member.id} />
+            <AppointmentRequestButton member={member} />
             <Link className="action secondary" href={`/organiser?invite=${member.id}`}>
               <T>{"Inviter à jouer"}</T>
             </Link>
@@ -1007,6 +1010,7 @@ export function OpportunitiesPage() {
         <T>{"Trouvez ce qui vous fait avancer."}</T>
       </p>
       <SearchField value={query} onChange={setQuery} label="Une opportunité, une ville…" />
+      <CareerNav />
       <Chips
         label="Types d’opportunités"
         values={["Toutes", "Coaching", "Recrutement", "Partenariat", "Sponsoring"]}
@@ -1108,7 +1112,7 @@ export function OpportunitiesPage() {
                 <li key={d}>{d}</li>
               ))}
             </ul>
-            <Button
+            {['coach', 'tryout'].includes(selected.id) ? <ApplyButton offerId={selected.id} /> : <Button
               className="action primary"
               aria-pressed={social.interested.includes(selected.id)}
               onClick={() => {
@@ -1124,7 +1128,7 @@ export function OpportunitiesPage() {
                 ? "Intérêt enregistré · annuler"
                 : "Ça m’intéresse · simuler"}
               <Check size={17} />
-            </Button>
+            </Button>}
           </div>
         )}
       </Modal>

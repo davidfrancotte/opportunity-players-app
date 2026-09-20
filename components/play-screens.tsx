@@ -1,4 +1,5 @@
 "use client";
+import { CareerAgenda, CareerNotices } from "./career-screens";
 import { T } from "./locale";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -1063,6 +1064,7 @@ export function AgendaPage() {
         Agenda de démonstration · heure de Bruxelles. Pas de synchronisation avec un calendrier
         externe.
       </p>
+      <CareerAgenda />
     </ProfileLayout>
   );
 }
@@ -1092,6 +1094,7 @@ export function NotificationsPage() {
         </Button>
       </div>
       <div className="notification-list">
+        <CareerNotices unreadOnly={unreadOnly} />
         {list.map((n) => (
           <Link
             key={n.id}
