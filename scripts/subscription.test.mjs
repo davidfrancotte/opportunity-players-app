@@ -1,19 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {limits,calendarMonth} from '../lib/entitlements.ts';
-import {monthlyPricesInCents} from '../lib/pricing.ts';
+import {monthlyPricesInCents,annualPricesInCents,monthlyPrice,annualPrice,annualSaving} from '../lib/pricing.ts';
 import {createSocialState,guardedSocialReducer,remainingMessages,canReceive,visibleMessages,accessReason} from '../lib/social.ts';
 import {createExtensionState,extensionReducer,workspace,weeklyDates,calendarFile,roleCan} from '../lib/extensions.ts';
 const now=Date.parse('2026-09-20T10:00:00Z'), context={key:'self:Organisation',category:'Organisation',premium:true,now};
 const act=(s,action,c=context)=>extensionReducer(s,{action,context:c});
 const get=s=>workspace(s,context.key);
 test('workbook quotas and owner clarification',()=>{
- assert.deepEqual(monthlyPricesInCents,{Sportif:299,Professionnel:1499,Organisation:2999});
+ assert.deepEqual(monthlyPricesInCents,{Sportif:299,Professionnel:999,Organisation:1999});
  assert.equal(limits('Sportif',false).contacts,3);assert.equal(limits('Organisation',false).contacts,5);
  assert.equal(limits('Professionnel',false).publish,true);assert.equal(limits('Organisation',false).publish,false);
  assert.equal(limits('Sportif',false).photos,3);assert.equal(limits('Organisation',false).videoSeconds,60);assert.equal(limits('Organisation',true).videoSeconds,180);
  assert.equal(limits('Professionnel',false).offers,0);assert.equal(limits('Organisation',false).offers,1);
  assert.equal(calendarMonth(Date.parse('2026-09-30T22:00:00Z')),'2026-10');
+});
+test('approved monthly and annual offers and exact savings',()=>{
+ assert.deepEqual(annualPricesInCents,{Sportif:2999,Professionnel:9999,Organisation:19999});
+ for(const [category,monthly,annual,saving] of [['Sportif','2,99 €','29,99 €','5,89 €'],['Professionnel','9,99 €','99,99 €','19,89 €'],['Organisation','19,99 €','199,99 €','39,89 €']]) {
+  assert.equal(monthlyPrice(category),monthly);assert.equal(annualPrice(category),annual);assert.equal(annualSaving(category),saving);
+ }
 });
 test('new contacts count once; replies, comments, received messages always free',()=>{
  const c={category:'Sportif',month:'2026-09'};let s=createSocialState();

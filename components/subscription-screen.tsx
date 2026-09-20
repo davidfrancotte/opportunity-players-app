@@ -6,7 +6,7 @@ import { NativeSelect, NativeSelectOption } from "./ui/native-select";
 import { ProfileLayout, Modal } from "./profile-screens";
 import { useDemo } from "./demo-provider";
 import { categories, type Category } from "@/lib/model";
-import { monthlyPrice } from "@/lib/pricing";
+import { monthlyPrice, annualPrice, annualSaving } from "@/lib/pricing";
 import { isPremium, remainingMessages } from "@/lib/social";
 import { limits } from "@/lib/entitlements";
 import catalog from "@/lib/offer-catalog.json";
@@ -15,6 +15,7 @@ export function SubscriptionPage() {
   const { profile, setProfile, social, dispatchSocial, access, notify, setCareerActor } = useDemo();
   const [confirm, setConfirm] = useState(false),
     [all, setAll] = useState(false);
+  const [annual, setAnnual] = useState(false);
   const paid = isPremium(social, profile.category),
     free = limits(profile.category, false),
     premium = limits(profile.category, true);
@@ -45,10 +46,20 @@ export function SubscriptionPage() {
         </div>
         <article className="premium-offer">
           <span>PREMIUM {categoryLabel(profile.category).toUpperCase()}</span>
-          <div className="subscription-price">
-            <strong>{monthlyPrice(profile.category)}</strong>
-            <span>/mois</span>
+          <div className="billing-period" role="group" aria-label="Périodicité de la formule">
+            <Button aria-pressed={!annual} onClick={() => setAnnual(false)}>Mensuel</Button>
+            <Button aria-pressed={annual} onClick={() => setAnnual(true)}>Annuel · tarif réduit</Button>
           </div>
+          <div className="subscription-price">
+            <strong>{annual ? annualPrice(profile.category) : monthlyPrice(profile.category)}</strong>
+            <span>{annual ? "/an" : "/mois"}</span>
+          </div>
+          <p className="annual-price-note">
+            {annual
+              ? `Paiement annuel en une fois. Économisez ${annualSaving(profile.category)} par rapport à 12 mensualités de ${monthlyPrice(profile.category)}.`
+              : `Ou ${annualPrice(profile.category)}/an, payés en une fois : ${annualSaving(profile.category)} d’économie par rapport à 12 mensualités.`}
+          </p>
+          <p className="price-caveat">Les mêmes fonctionnalités et quotas sont inclus, quelle que soit la périodicité.</p>
           <ul className="premium-benefits">
             <li>{premium.contacts} nouvelles demandes de conversation par mois</li>
             <li>{premium.searches} recherches favorites avec alertes de nouveautés</li>
@@ -163,7 +174,7 @@ export function SubscriptionPage() {
           description="Vous débloquez les outils Premium de ce profil fictif. Aucun paiement réel."
         >
           <p>
-            {categoryLabel(profile.category)} · {monthlyPrice(profile.category)}/mois affichés ·
+            {categoryLabel(profile.category)} · {annual ? annualPrice(profile.category) + "/an, en une fois" : monthlyPrice(profile.category) + "/mois"} affichés ·
             montant prélevé : 0 €.
           </p>
           <Button

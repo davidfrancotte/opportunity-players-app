@@ -240,6 +240,30 @@
 .subscription-price {
   margin: 21px 0 12px;
 }
+.billing-period {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.billing-period button {
+  flex: 1 1 120px;
+  min-height: 44px;
+  border: 1px solid #566449;
+  background: transparent;
+  color: #edf2e6;
+}
+.billing-period button[aria-pressed="true"] {
+  background: #d1f94c;
+  color: #14200b;
+  border-color: #d1f94c;
+}
+.annual-price-note {
+  color: #dce8cd;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0 0 10px;
+}
 .subscription-price small {
   display: block;
   color: #a8bd93;

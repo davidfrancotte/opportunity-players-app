@@ -9,7 +9,7 @@ import { useDemo } from "./demo-provider";
 import { isPremium, remainingMessages, type AccessReason } from "@/lib/social";
 import type { Category } from "@/lib/model";
 import {limits} from "@/lib/entitlements";
-import { monthlyPrice } from "@/lib/pricing";
+import { monthlyPrice, annualPrice } from "@/lib/pricing";
 
 export const categoryLabel = (category: Category) =>
   category === "Sportif" ? "Joueur" : category === "Organisation" ? "Collectif" : "Professionnel";
@@ -28,7 +28,7 @@ export function FreePlanNote({ category }: { category: Category }) {
       <small>
         <T>{"Premium optionnel :"}</T>
         {monthlyPrice(category)}
-        <T>{"/mois. Aucun paiement à l’inscription."}</T>
+        /mois ou {annualPrice(category)}/an. Aucun paiement à l’inscription.
       </small>
     </aside>
   );
@@ -57,6 +57,7 @@ export function PlanStatus({ compact = false }: { compact?: boolean }) {
           <em className="plan-monthly">
             Premium · {monthlyPrice(profile.category)}
             <T>{"/mois"}</T>
+            {" · ou "}{annualPrice(profile.category)}/an
           </em>
         )}
       </span>
@@ -151,6 +152,7 @@ export function UpgradeGate() {
           <p className="upgrade-price">
             {monthlyPrice(profile.category)}
             <span>/mois · offre {categoryLabel(profile.category)}</span>
+            <span>ou {annualPrice(profile.category)}/an, payés en une fois</span>
           </p>
         )}
         {!!copy.benefits.length && (
