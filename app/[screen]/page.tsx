@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { StudioScreen } from "@/components/studio-screen";
 const titles: Record<string, string> = {
+  "dossier-sportif": "Dossier sportif",
   disciplines: "Sports, niveaux et clubs",
   agent: "Mon agent",
   documents: "CV et références",

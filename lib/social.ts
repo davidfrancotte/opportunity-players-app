@@ -1,6 +1,7 @@
 import type { Category } from "./model";
 import { moderateText } from "./trust.ts";
 export type Member = {
+  birthDate?: string;
   id: string;
   name: string;
   kind: "Joueurs" | "Professionnels" | "Collectives";
@@ -16,6 +17,7 @@ export type Member = {
 export const members: Member[] = [
   {
     id: "ines",
+    birthDate: "2000-05-12",
     name: "Inès Martin",
     kind: "Joueurs",
     role: "Gardienne · Football",
@@ -52,6 +54,7 @@ export const members: Member[] = [
   },
   {
     id: "lea",
+    birthDate: "1997-03-21",
     country: "Belgique",
     gender: "Femme",
     name: "Léa Moreau",
@@ -64,6 +67,7 @@ export const members: Member[] = [
   },
   {
     id: "noah",
+    birthDate: "2004-11-08",
     country: "Belgique",
     gender: "Homme",
     name: "Noah Laurent",

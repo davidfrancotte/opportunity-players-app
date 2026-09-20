@@ -1,4 +1,5 @@
 "use client";
+import { T } from "./locale";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowUpRight, Check, LockKeyhole, Sparkles, X } from "lucide-react";
@@ -15,7 +16,8 @@ export function FreePlanNote({ category }: { category: Category }) {
   return (
     <aside className="free-plan-note">
       <span>
-        <Check size={15} /> Votre compte est gratuit
+        <Check size={15} />
+        <T>{"Votre compte est gratuit"}</T>
       </span>
       <p>
         {category === "Sportif"
@@ -23,7 +25,9 @@ export function FreePlanNote({ category }: { category: Category }) {
           : "Présentez votre activité et publiez gratuitement. Premium est nécessaire pour échanger avec les joueurs, recevoir des messages et recevoir des commentaires sur vos posts."}
       </p>
       <small>
-        Premium optionnel : {monthlyPrice(category)}/mois. Aucun paiement à l’inscription.
+        <T>{"Premium optionnel :"}</T>
+        {monthlyPrice(category)}
+        <T>{"/mois. Aucun paiement à l’inscription."}</T>
       </small>
     </aside>
   );
@@ -49,7 +53,10 @@ export function PlanStatus({ compact = false }: { compact?: boolean }) {
               : "Activez vos échanges avec les joueurs."}
         </small>
         {!premium && (
-          <em className="plan-monthly">Premium · {monthlyPrice(profile.category)}/mois</em>
+          <em className="plan-monthly">
+            Premium · {monthlyPrice(profile.category)}
+            <T>{"/mois"}</T>
+          </em>
         )}
       </span>
       <ArrowUpRight size={18} />
@@ -163,13 +170,16 @@ export function UpgradeGate() {
               router.push("/abonnement?retour=" + encodeURIComponent(pathname));
             }}
           >
-            Voir mon offre <ArrowUpRight size={18} />
+            <T>{"Voir mon offre"}</T>
+            <ArrowUpRight size={18} />
           </Button>
         )}
         <Button variant="ghost" className="keep-free" onClick={close}>
           {reason === "recipient" ? "Compris" : "Continuer gratuitement"}
         </Button>
-        <p className="demo-context">Démo uniquement. Aucun prélèvement, aucun achat réel.</p>
+        <p className="demo-context">
+          <T>{"Démo uniquement. Aucun prélèvement, aucun achat réel."}</T>
+        </p>
       </DialogContent>
     </Dialog>
   );

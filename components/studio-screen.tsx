@@ -1,4 +1,5 @@
 "use client";
+import { SportsPortfolioPage } from "./sport-portfolio";
 import { Suspense } from "react";
 import {
   DisciplinesPage,
@@ -17,19 +18,9 @@ import {
   Login,
   ForgotPassword,
 } from "./auth-screens";
-import {
-  ProfilePage,
-  ProfileLayout,
-  EditProfile,
-  SettingsPage,
-} from "./profile-screens";
+import { ProfilePage, ProfileLayout, EditProfile, SettingsPage } from "./profile-screens";
 import { SubscriptionPage } from "./subscription-screen";
-import {
-  FeedPage,
-  NetworkPage,
-  MessagesPage,
-  OpportunitiesPage,
-} from "./social-screens";
+import { FeedPage, NetworkPage, MessagesPage, OpportunitiesPage } from "./social-screens";
 import {
   PlayPage,
   CreateMatchPage,
@@ -39,6 +30,8 @@ import {
 } from "./play-screens";
 export function StudioScreen({ screen }: { screen: string }) {
   switch (screen) {
+    case "dossier-sportif":
+      return <SportsPortfolioPage />;
     case "disciplines":
       return <DisciplinesPage />;
     case "agent":

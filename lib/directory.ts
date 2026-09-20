@@ -1,4 +1,5 @@
 import type { Category, Profile } from "./model";
+import { ageOn } from "./sport-profile.ts";
 import type { Member } from "./social";
 import { normalizeText, levels, type SportRecord } from "./trust.ts";
 
@@ -150,6 +151,11 @@ export function updatePrimaryRecord(profile: Profile, patch: Partial<SportRecord
   };
 }
 export type DirectoryFilters = {
+  ageMin: string;
+  ageMax: string;
+  paraSport: string;
+  availability: string;
+  contractStatus: string;
   kind: string;
   sport: string;
   country: string;
@@ -164,6 +170,11 @@ export type DirectoryFilters = {
   query: string;
 };
 export const emptyDirectoryFilters: DirectoryFilters = {
+  ageMin: "",
+  ageMax: "",
+  paraSport: "Tous",
+  availability: "Tous",
+  contractStatus: "Tous",
   kind: "Tous",
   sport: "Tous",
   country: "",
@@ -181,6 +192,11 @@ export function changeDirectoryKind(filters: DirectoryFilters, kind: string): Di
   return {
     ...filters,
     kind,
+    ageMin: "",
+    ageMax: "",
+    paraSport: "Tous",
+    availability: "Tous",
+    contractStatus: "Tous",
     gender: "Tous",
     level: "Tous",
     position: "",
@@ -196,6 +212,15 @@ export function matchesDirectory(member: Member, records: SportRecord[], f: Dire
   if (f.kind !== "Tous" && member.kind !== f.kind) return false;
   if (!contains(member.country, f.country) || !contains(member.city, f.city)) return false;
   const playerFilters = f.kind === "Joueurs";
+  if (playerFilters && (f.ageMin || f.ageMax)) {
+    const age = ageOn(member.birthDate);
+    if (
+      age === null ||
+      (f.ageMin && age < Number(f.ageMin)) ||
+      (f.ageMax && age > Number(f.ageMax))
+    )
+      return false;
+  }
   if (playerFilters && f.gender !== "Tous" && member.gender !== f.gender) return false;
   if (
     ["Professionnels", "Collectives"].includes(f.kind) &&
@@ -208,7 +233,12 @@ export function matchesDirectory(member: Member, records: SportRecord[], f: Dire
         (r) =>
           (f.sport === "Tous" || r.sport === f.sport) &&
           (!playerFilters ||
-            ((f.level === "Tous" || r.level === f.level) &&
+            ((!f.paraSport || f.paraSport === "Tous" || r.paraSport === f.paraSport) &&
+              (!f.availability || f.availability === "Tous" || r.availability === f.availability) &&
+              (!f.contractStatus ||
+                f.contractStatus === "Tous" ||
+                r.contractStatus === f.contractStatus) &&
+              (f.level === "Tous" || r.level === f.level) &&
               contains(r.position || "", f.position) &&
               (f.dominantSide === "Tous" || r.dominantSide === f.dominantSide) &&
               contains(r.ranking, f.ranking) &&
@@ -216,7 +246,10 @@ export function matchesDirectory(member: Member, records: SportRecord[], f: Dire
       )
     : (f.sport === "Tous" || member.sport === f.sport) &&
       (!playerFilters ||
-        (f.level === "Tous" &&
+        ((!f.paraSport || f.paraSport === "Tous") &&
+          (!f.availability || f.availability === "Tous") &&
+          (!f.contractStatus || f.contractStatus === "Tous") &&
+          f.level === "Tous" &&
           !f.position.trim() &&
           f.dominantSide === "Tous" &&
           !f.club.trim() &&

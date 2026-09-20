@@ -1,5 +1,8 @@
 "use client";
+import { T } from "./locale";
 import Link from "next/link";
+import { ExtraDirectoryFilters } from "./sport-profile-fields";
+import { ageOn } from "@/lib/sport-profile";
 import { MemberDossier, SafetyActions } from "./trust-screens";
 import { memberSports } from "@/lib/trust";
 import {
@@ -125,9 +128,13 @@ function SportSelect({
   return (
     <div className="compact-select">
       <SlidersHorizontal size={16} aria-hidden="true" />
-      <label htmlFor={id}>Sport</label>
+      <label htmlFor={id}>
+        <T>{"Sport"}</T>
+      </label>
       <NativeSelect id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-        <NativeSelectOption value="Tous">Tous les sports</NativeSelectOption>
+        <NativeSelectOption value="Tous">
+          <T>{"Tous les sports"}</T>
+        </NativeSelectOption>
         {sports.map((s) => (
           <NativeSelectOption key={s} value={s}>
             {s}
@@ -153,9 +160,12 @@ export function FeedPage() {
     <ProfileLayout>
       <div className="social-title">
         <div>
-          <span className="mini-kicker">VOTRE SPORT. VOTRE RÉSEAU.</span>
+          <span className="mini-kicker">
+            <T>{"VOTRE SPORT. VOTRE RÉSEAU."}</T>
+          </span>
           <h1>
-            Dans le mouvement<span>.</span>
+            <T>{"Dans le mouvement"}</T>
+            <span>.</span>
           </h1>
         </div>
       </div>
@@ -170,7 +180,10 @@ export function FeedPage() {
       >
         <img src={profile.photo} alt="" />
         <span>
-          Quoi de neuf sur votre terrain ?<small>Partager un moment, une idée, une réussite</small>
+          <T>{"Quoi de neuf sur votre terrain ?"}</T>
+          <small>
+            <T>{"Partager un moment, une idée, une réussite"}</T>
+          </small>
         </span>
         <Plus size={22} />
       </button>
@@ -181,10 +194,17 @@ export function FeedPage() {
         onChange={setSport}
       />
       <div className="list-caption">
-        <span>Le fil de votre communauté</span>
-        <span>{posts.length} publications</span>
+        <span>
+          <T>{"Le fil de votre communauté"}</T>
+        </span>
+        <span>
+          {posts.length}
+          <T>{"publications"}</T>
+        </span>
       </div>
-      <p className="demo-context">Profils et publications fictifs · rien n’est publié en ligne.</p>
+      <p className="demo-context">
+        <T>{"Profils et publications fictifs · rien n’est publié en ligne."}</T>
+      </p>
       <div className="feed-list">
         {posts.map((post) => (
           <article key={post.id} className="post-card">
@@ -227,7 +247,9 @@ export function FeedPage() {
                   ? "Activer les commentaires"
                   : visibleComments(social, access, post).length || "Commenter"}
               </Button>
-              <span>Démo</span>
+              <span>
+                <T>{"Démo"}</T>
+              </span>
             </div>
           </article>
         ))}
@@ -273,11 +295,16 @@ export function FeedPage() {
             notify("Publication ajoutée au fil de démonstration uniquement.");
           }}
         >
-          <label htmlFor="post-text">Votre publication</label>
+          <label htmlFor="post-text">
+            <T>{"Votre publication"}</T>
+          </label>
           {!canReceive(social, profile.category) && (
             <p className="free-plan-note">
-              Vous pouvez publier gratuitement. La réception des commentaires sur votre post sera
-              disponible avec Premium.
+              <T>
+                {
+                  "Vous pouvez publier gratuitement. La réception des commentaires sur votre post sera disponible avec Premium."
+                }
+              </T>
             </p>
           )}
           <Textarea
@@ -290,7 +317,9 @@ export function FeedPage() {
             rows={5}
           />
           <small className="character-count">{text.length}/1200</small>
-          <label htmlFor="post-sport">Discipline</label>
+          <label htmlFor="post-sport">
+            <T>{"Discipline"}</T>
+          </label>
           <NativeSelect
             id="post-sport"
             value={postSport}
@@ -301,10 +330,13 @@ export function FeedPage() {
             ))}
           </NativeSelect>
           <label htmlFor="post-photo">
-            <ImagePlus size={16} /> Illustration fournie (facultative)
+            <ImagePlus size={16} />
+            <T>{"Illustration fournie (facultative)"}</T>
           </label>
           <NativeSelect id="post-photo" value={photo} onChange={(e) => setPhoto(e.target.value)}>
-            <NativeSelectOption value="">Sans image</NativeSelectOption>
+            <NativeSelectOption value="">
+              <T>{"Sans image"}</T>
+            </NativeSelectOption>
             {photos.map((p) => (
               <NativeSelectOption key={p.src} value={p.src}>
                 {p.label}
@@ -313,7 +345,8 @@ export function FeedPage() {
           </NativeSelect>
           {photo && <img className="compose-preview" src={photo} alt="Illustration sélectionnée" />}
           <Submit className="action primary" disabled={!text.trim()}>
-            Publier dans la démo <ArrowUpRight size={18} />
+            <T>{"Publier dans la démo"}</T>
+            <ArrowUpRight size={18} />
           </Submit>
         </form>
       </Modal>
@@ -336,7 +369,9 @@ export function FeedPage() {
                   </div>
                 ))
               ) : (
-                <p>Soyez le premier à réagir.</p>
+                <p>
+                  <T>{"Soyez le premier à réagir."}</T>
+                </p>
               )}
             </div>
             {commentReason(social, access, selected) ? (
@@ -359,7 +394,9 @@ export function FeedPage() {
                   setComment("");
                 }}
               >
-                <label htmlFor="comment">Votre commentaire</label>
+                <label htmlFor="comment">
+                  <T>{"Votre commentaire"}</T>
+                </label>
                 <Textarea
                   id="comment"
                   value={comment}
@@ -368,7 +405,8 @@ export function FeedPage() {
                   required
                 />
                 <Submit className="action primary" disabled={!comment.trim()}>
-                  Commenter dans la démo <Send size={16} />
+                  <T>{"Commenter dans la démo"}</T>
+                  <Send size={16} />
                 </Submit>
               </form>
             )}
@@ -403,9 +441,12 @@ export function NetworkPage() {
     <ProfileLayout>
       <div className="social-title">
         <div>
-          <span className="mini-kicker">LES BONNES RENCONTRES</span>
+          <span className="mini-kicker">
+            <T>{"LES BONNES RENCONTRES"}</T>
+          </span>
           <h1>
-            Votre réseau<span>.</span>
+            <T>{"Votre réseau"}</T>
+            <span>.</span>
           </h1>
         </div>
         <UsersRound className="title-symbol" size={28} />
@@ -434,7 +475,8 @@ export function NetworkPage() {
           aria-pressed={onlyFollowed}
           onClick={() => setOnlyFollowed(!onlyFollowed)}
         >
-          Suivis · {social.following.length}
+          <T>{"Suivis ·"}</T>
+          {social.following.length}
         </Button>
       </div>
       <section className="directory-panel" aria-label="Filtres du réseau">
@@ -449,7 +491,7 @@ export function NetworkPage() {
         </h2>
         <div className="directory-filter-grid">
           <label>
-            Pays
+            <T>{"Pays"}</T>
             <input
               aria-label="Filtrer par pays"
               value={filters.country}
@@ -464,7 +506,7 @@ export function NetworkPage() {
             ))}
           </datalist>
           <label>
-            Ville
+            <T>{"Ville"}</T>
             <input
               aria-label="Filtrer par ville"
               value={filters.city}
@@ -474,34 +516,43 @@ export function NetworkPage() {
           </label>
           {kind === "Joueurs" && (
             <>
+              <ExtraDirectoryFilters filters={filters} onChange={updateFilter} />
               <label>
-                Genre
+                <T>{"Genre"}</T>
                 <select
                   aria-label="Filtrer par genre"
                   value={filters.gender}
                   onChange={(e) => updateFilter("gender", e.target.value)}
                 >
-                  <option value="Tous">Tous les genres</option>
+                  <option value="Tous">
+                    <T>{"Tous les genres"}</T>
+                  </option>
                   {genders.map((v) => (
-                    <option key={v}>{v}</option>
+                    <option key={v} value={v}>
+                      <T>{v}</T>
+                    </option>
                   ))}
                 </select>
               </label>
               <label>
-                Niveau
+                <T>{"Niveau"}</T>
                 <select
                   aria-label="Filtrer par niveau"
                   value={filters.level}
                   onChange={(e) => updateFilter("level", e.target.value)}
                 >
-                  <option value="Tous">Tous les niveaux</option>
+                  <option value="Tous">
+                    <T>{"Tous les niveaux"}</T>
+                  </option>
                   {levels.map((v) => (
-                    <option key={v}>{v}</option>
+                    <option key={v} value={v}>
+                      <T>{v}</T>
+                    </option>
                   ))}
                 </select>
               </label>
               <label>
-                Position / poste
+                <T>{"Position / poste"}</T>
                 <input
                   aria-label="Filtrer par position"
                   value={filters.position}
@@ -516,15 +567,19 @@ export function NetworkPage() {
                 ))}
               </datalist>
               <label>
-                {sideLabel(sport)}
+                <T>{sideLabel(sport)}</T>
                 <select
                   aria-label="Filtrer par côté dominant"
                   value={filters.dominantSide}
                   onChange={(e) => updateFilter("dominantSide", e.target.value)}
                 >
-                  <option value="Tous">Tous les côtés</option>
+                  <option value="Tous">
+                    <T>{"Tous les côtés"}</T>
+                  </option>
                   {dominantSides.map((v) => (
-                    <option key={v}>{v}</option>
+                    <option key={v} value={v}>
+                      <T>{v}</T>
+                    </option>
                   ))}
                 </select>
               </label>
@@ -532,15 +587,19 @@ export function NetworkPage() {
           )}
           {["Professionnels", "Collectives"].includes(kind) && (
             <label className="directory-wide">
-              Type de compte
+              <T>{"Type de compte"}</T>
               <select
                 aria-label="Filtrer par type de compte"
                 value={filters.accountType}
                 onChange={(e) => updateFilter("accountType", e.target.value)}
               >
-                <option value="Tous">Tous les types de compte</option>
+                <option value="Tous">
+                  <T>{"Tous les types de compte"}</T>
+                </option>
                 {(kind === "Professionnels" ? professionalTypes : collectiveTypes).map((v) => (
-                  <option key={v}>{v}</option>
+                  <option key={v} value={v}>
+                    <T>{v}</T>
+                  </option>
                 ))}
               </select>
             </label>
@@ -548,16 +607,21 @@ export function NetworkPage() {
         </div>
         {kind === "Tous" && (
           <p className="field-hint">
-            Choisissez Joueurs, Professionnels ou Collectives pour afficher les critères
-            spécifiques.
+            <T>
+              {
+                "Choisissez Joueurs, Professionnels ou Collectives pour afficher les critères spécifiques."
+              }
+            </T>
           </p>
         )}
         {kind === "Joueurs" && (
           <details className="directory-extra">
-            <summary>Club et classement</summary>
+            <summary>
+              <T>{"Club et classement"}</T>
+            </summary>
             <div className="directory-filter-grid">
               <label>
-                Club actuel ou passé
+                <T>{"Club actuel ou passé"}</T>
                 <input
                   aria-label="Filtrer par club"
                   value={filters.club}
@@ -566,7 +630,7 @@ export function NetworkPage() {
                 />
               </label>
               <label>
-                Classement
+                <T>{"Classement"}</T>
                 <input
                   aria-label="Filtrer par classement"
                   value={filters.ranking}
@@ -584,17 +648,18 @@ export function NetworkPage() {
             setOnlyFollowed(false);
           }}
         >
-          Réinitialiser les filtres
+          <T>{"Réinitialiser les filtres"}</T>
         </Button>
       </section>
       <div className="list-caption">
         <span>{onlyFollowed ? "Vous les suivez" : "Des profils à découvrir"}</span>
         <span role="status" aria-live="polite">
-          {filtered.length} résultats
+          {filtered.length}
+          <T>{"résultats"}</T>
         </span>
       </div>
       <p className="demo-context">
-        Tous les membres sont fictifs. « Collectives » : clubs, équipes et organisations.
+        <T>{"Tous les membres sont fictifs. « Collectives » : clubs, équipes et organisations."}</T>
       </p>
       <div className="network-list">
         {filtered.map((m) => (
@@ -606,6 +671,12 @@ export function NetworkPage() {
                   {m.kind} · {memberSports[m.id]?.map((r) => r.sport).join(" / ") || m.sport}
                 </small>
                 <strong>{m.name}</strong>
+                {m.kind === "Joueurs" && ageOn(m.birthDate) !== null && (
+                  <span>
+                    {ageOn(m.birthDate)}
+                    <T>{"ans"}</T>
+                  </span>
+                )}
                 <span>{m.role}</span>
                 <span>{[m.gender, m.accountType].filter(Boolean).join(" · ")}</span>
                 {memberSports[m.id] && (
@@ -613,7 +684,16 @@ export function NetworkPage() {
                     {memberSports[m.id]
                       .filter((r) => sport === "Tous" || r.sport === sport)
                       .map((r) =>
-                        [r.sport, r.level, r.ranking, r.position, r.dominantSide]
+                        [
+                          r.sport,
+                          r.level,
+                          r.ranking,
+                          r.position,
+                          r.dominantSide,
+                          r.paraSport === "yes" ? "Handisport" : "",
+                          r.availability,
+                          r.contractStatus,
+                        ]
                           .filter(Boolean)
                           .join(" · "),
                       )
@@ -638,7 +718,7 @@ export function NetworkPage() {
               </Button>
               <Button variant="outline" onClick={() => message(m)}>
                 <MessageCircle size={16} />
-                Message
+                <T>{"Message"}</T>
               </Button>
             </div>
           </article>
@@ -673,10 +753,11 @@ export function NetworkPage() {
             <MemberDossier key={member.id} member={member} />
             <SafetyActions memberId={member.id} />
             <Link className="action secondary" href={`/organiser?invite=${member.id}`}>
-              Inviter à jouer
+              <T>{"Inviter à jouer"}</T>
             </Link>
             <Button className="action primary" onClick={() => message(member)}>
-              Commencer une conversation <MessageCircle size={17} />
+              <T>{"Commencer une conversation"}</T>
+              <MessageCircle size={17} />
             </Button>
           </div>
         )}
@@ -704,9 +785,12 @@ export function MessagesPage() {
     <ProfileLayout>
       <div className="social-title">
         <div>
-          <span className="mini-kicker">LE LIEN COMMENCE ICI</span>
+          <span className="mini-kicker">
+            <T>{"LE LIEN COMMENCE ICI"}</T>
+          </span>
           <h1>
-            Messages<span>.</span>
+            <T>{"Messages"}</T>
+            <span>.</span>
           </h1>
         </div>
         <Button
@@ -719,11 +803,11 @@ export function MessagesPage() {
         </Button>
       </div>
       <p className="demo-context">
-        Conversations simulées. Aucun message n’est envoyé à une personne réelle.
+        <T>{"Conversations simulées. Aucun message n’est envoyé à une personne réelle."}</T>
       </p>
       <PlanStatus compact />
       <Link className="text-link" href="/securite">
-        Sécurité : signalements et membres bloqués
+        <T>{"Sécurité : signalements et membres bloqués"}</T>
       </Link>
       {!canReceive(social, access.category) && <LockedFeature />}
       {active && member ? (
@@ -750,9 +834,13 @@ export function MessagesPage() {
             aria-label="Historique des messages"
             aria-live="polite"
           >
-            <span className="chat-date">CONVERSATION DE DÉMONSTRATION</span>
+            <span className="chat-date">
+              <T>{"CONVERSATION DE DÉMONSTRATION"}</T>
+            </span>
             {!active.messages.length && (
-              <p className="chat-empty">Commencez l’échange avec un message fictif.</p>
+              <p className="chat-empty">
+                <T>{"Commencez l’échange avec un message fictif."}</T>
+              </p>
             )}
             {visibleMessages(social, access, active).map((m) => (
               <div key={m.id} className={m.mine ? "message-bubble mine" : "message-bubble"}>
@@ -777,7 +865,7 @@ export function MessagesPage() {
             }}
           >
             <label className="sr-only" htmlFor="message-text">
-              Votre message fictif
+              <T>{"Votre message fictif"}</T>
             </label>
             <Textarea
               id="message-text"
@@ -904,16 +992,19 @@ export function OpportunitiesPage() {
     <ProfileLayout>
       <div className="social-title">
         <div>
-          <span className="mini-kicker">VOTRE PROCHAIN CHAPITRE</span>
+          <span className="mini-kicker">
+            <T>{"VOTRE PROCHAIN CHAPITRE"}</T>
+          </span>
           <h1>
-            Opportunities<span>.</span>
+            <T>{"Opportunities"}</T>
+            <span>.</span>
           </h1>
         </div>
       </div>
       <p className="social-intro">
-        Un projet, une équipe, une rencontre.
+        <T>{"Un projet, une équipe, une rencontre."}</T>
         <br />
-        Trouvez ce qui vous fait avancer.
+        <T>{"Trouvez ce qui vous fait avancer."}</T>
       </p>
       <SearchField value={query} onChange={setQuery} label="Une opportunité, une ville…" />
       <Chips
@@ -932,14 +1023,21 @@ export function OpportunitiesPage() {
         >
           <Bookmark size={15} />
           {social.saved.length}
-          <span className="sr-only">Voir les favoris</span>
+          <span className="sr-only">
+            <T>{"Voir les favoris"}</T>
+          </span>
         </Button>
       </div>
       <div className="list-caption">
         <span>{savedOnly ? "Vos favoris" : "À explorer"}</span>
-        <span>{filtered.length} opportunités</span>
+        <span>
+          {filtered.length}
+          <T>{"opportunités"}</T>
+        </span>
       </div>
-      <p className="demo-context">Annonces fictives · aucune candidature ni transaction réelle.</p>
+      <p className="demo-context">
+        <T>{"Annonces fictives · aucune candidature ni transaction réelle."}</T>
+      </p>
       <div className="opportunity-list">
         {filtered.map((o) => (
           <article className="opportunity-card" key={o.id}>
@@ -974,7 +1072,8 @@ export function OpportunitiesPage() {
                   onClick={() => setSelected(o)}
                   aria-label={"Voir l’opportunité : " + o.title}
                 >
-                  Voir <ArrowUpRight size={19} />
+                  <T>{"Voir"}</T>
+                  <ArrowUpRight size={19} />
                 </Button>
               </div>
             </div>

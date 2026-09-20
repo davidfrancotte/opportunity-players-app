@@ -1,4 +1,6 @@
 "use client";
+import { T } from "./locale";
+import { RegistrationFields, SportExtraFields } from "./sport-profile-fields";
 import { Field } from "./studio-ui";
 import { sideNames } from "@/lib/athlete";
 import { NativeSelect, NativeSelectOption } from "./ui/native-select";
@@ -35,7 +37,9 @@ export function PlayerSportFields({
           onChange={(e) => onChange({ level: e.target.value })}
         >
           {levels.map((v) => (
-            <NativeSelectOption key={v}>{v}</NativeSelectOption>
+            <NativeSelectOption key={v} value={v}>
+              <T>{v}</T>
+            </NativeSelectOption>
           ))}
         </NativeSelect>
       </Field>
@@ -60,14 +64,17 @@ export function PlayerSportFields({
           value={record.dominantSide || ""}
           onChange={(e) => onChange({ dominantSide: e.target.value })}
         >
-          <NativeSelectOption value="">Non renseigné / non applicable</NativeSelectOption>
+          <NativeSelectOption value="">
+            <T>{"Non renseigné / non applicable"}</T>
+          </NativeSelectOption>
           {dominantSides.map((v) => (
             <NativeSelectOption key={v} value={v}>
-              {sideNames[v]}
+              <T>{sideNames[v]}</T>
             </NativeSelectOption>
           ))}
         </NativeSelect>
       </Field>
+      <SportExtraFields record={record} onChange={onChange} prefix={prefix} />
     </div>
   );
 }
@@ -103,10 +110,13 @@ export function ProfileDirectoryFields({
       </datalist>
       {profile.category === "Sportif" ? (
         <>
+          <RegistrationFields profile={profile} onChange={onChange} errors={errors} />
           <fieldset className="athlete-measurements">
-            <legend>Vos caractéristiques physiques</legend>
+            <legend>
+              <T>{"Vos caractéristiques physiques"}</T>
+            </legend>
             <p className="field-hint">
-              Facultatif. Ces informations seront visibles sur votre profil sportif.
+              <T>{"Facultatif. Ces informations seront visibles sur votre profil sportif."}</T>
             </p>
             <div className="field-pair">
               <Field
@@ -139,9 +149,13 @@ export function ProfileDirectoryFields({
               aria-describedby={errors.gender ? "gender-error" : undefined}
               onChange={(e) => onChange({ ...profile, gender: e.target.value })}
             >
-              <NativeSelectOption value="">Non renseigné</NativeSelectOption>
+              <NativeSelectOption value="">
+                <T>{"Non renseigné"}</T>
+              </NativeSelectOption>
               {genders.map((v) => (
-                <NativeSelectOption key={v}>{v}</NativeSelectOption>
+                <NativeSelectOption key={v} value={v}>
+                  <T>{v}</T>
+                </NativeSelectOption>
               ))}
             </NativeSelect>
           </Field>
@@ -179,11 +193,16 @@ export function ProfileDirectoryFields({
               {profile.category === "Professionnel" ? "votre métier" : "le type de structure"}
             </NativeSelectOption>
             {typesFor(profile.category).map((v) => (
-              <NativeSelectOption key={v}>{v}</NativeSelectOption>
+              <NativeSelectOption key={v} value={v}>
+                <T>{v}</T>
+              </NativeSelectOption>
             ))}
           </NativeSelect>
           {profile.accountType && typesFor(profile.category).includes(profile.accountType) && (
-            <p className="field-hint">Sélection : {profile.accountType}</p>
+            <p className="field-hint">
+              <T>{"Sélection :"}</T>
+              {profile.accountType}
+            </p>
           )}
         </Field>
       )}

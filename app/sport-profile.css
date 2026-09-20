@@ -1,0 +1,126 @@
+.locale-switch {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  font-size: 12px;
+  margin: 12px 0;
+  color: inherit;
+}
+.locale-switch select {
+  width: auto;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #78816b;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+}
+.locale-switch option {
+  color: #111;
+  background: #fff;
+}
+.sport-extra-fields {
+  border: 1px solid #424b3e;
+  border-radius: 18px;
+  padding: 20px;
+  margin: 20px 0;
+  min-width: 0;
+}
+.sport-extra-fields legend {
+  font-weight: 600;
+  padding: 0 6px;
+}
+.registration-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.registration-choices label,
+.sport-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.6;
+}
+.sport-consent input,
+.registration-choices input {
+  flex: 0 0 18px;
+  margin-top: 5px;
+  width: 18px;
+  height: 18px;
+  accent-color: #c9f64c;
+}
+.sport-extra-fields select,
+.portfolio-form select {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px;
+  border: 1px solid #718064;
+  border-radius: 10px;
+  background: #1b211c;
+  color: #f6f7ed;
+}
+.sport-profile-summary {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+.sport-profile-summary p {
+  margin: 0;
+}
+.sport-profile-summary .sport-chip {
+  justify-self: start;
+}
+.portfolio-panel {
+  border-top: 1px solid #434d3d;
+  padding: 28px 0;
+  margin: 12px 0;
+  min-width: 0;
+}
+.portfolio-panel h2 {
+  font-size: 26px;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+.portfolio-record {
+  border: 1px solid #424b3e;
+  border-radius: 18px;
+  padding: 18px;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+}
+.portfolio-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.portfolio-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.portfolio-panel video {
+  width: 100%;
+  max-height: 420px;
+  display: block;
+  background: #000;
+  border-radius: 14px;
+}
+.portfolio-panel input[type="file"] {
+  max-width: 100%;
+  padding: 10px;
+  height: auto;
+}
+.portfolio-form .field {
+  margin: 0;
+}
+.child-mode-note {
+  padding: 12px 16px;
+  border: 1px solid #626e4b;
+  border-radius: 12px;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}

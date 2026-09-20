@@ -7,6 +7,12 @@ export type ClubRecord = {
   period: string;
 };
 export type SportRecord = {
+  paraSport?: "yes" | "no" | "";
+  availability?: string;
+  availableFrom?: string;
+  contractStatus?: string;
+  licenceNumber?: string;
+  licenceSeason?: string;
   sport: string;
   position?: string;
   dominantSide?: string;
@@ -133,6 +139,9 @@ export const memberSports: Record<string, SportRecord[]> = {
   lea: [
     {
       sport: "Tennis",
+      paraSport: "yes",
+      availability: "Disponible",
+      contractStatus: "Libre",
       position: "Double",
       dominantSide: "Droite",
       level: "Compétition",

@@ -1,5 +1,12 @@
 import { directoryIssues } from "./directory.ts";
 import { athleteIssues, measurementLabel } from "./athlete.ts";
+import {
+  ageOn,
+  sportProfileIssues,
+  type Guardian,
+  type Achievement,
+  type SportVideo,
+} from "./sport-profile.ts";
 export const DEMO_PASSWORD = "ArenaDemo2026!";
 export const DEMO_CODE = "246810";
 export const DEMO_EMAIL = "alex@demo.example";
@@ -27,6 +34,11 @@ export type Experience = {
   description: string;
 };
 export type Profile = {
+  birthDate: string;
+  registrationMode: "self" | "child";
+  guardian: Guardian;
+  achievements: Achievement[];
+  videos: SportVideo[];
   disciplines: SportRecord[];
   agent: AgentRecord;
   firstName: string;
@@ -60,6 +72,11 @@ export const photos = [
   { src: "/images/athletics-color.webp", label: "Le goût du dépassement" },
 ];
 export const initialProfile: Profile = {
+  birthDate: "",
+  registrationMode: "self",
+  guardian: { name: "", relationship: "", consent: false },
+  achievements: [],
+  videos: [],
   disciplines: [
     {
       sport: "Padel",
@@ -138,7 +155,11 @@ export function validDemoCode(code: string) {
   return code === DEMO_CODE;
 }
 export function validateProfile(profile: Profile): Issues {
-  const errors: Issues = { ...directoryIssues(profile), ...athleteIssues(profile) };
+  const errors: Issues = {
+    ...directoryIssues(profile),
+    ...athleteIssues(profile),
+    ...sportProfileIssues(profile),
+  };
   if (!profile.firstName.trim()) errors.firstName = "Le prénom est requis.";
   if (!profile.lastName.trim()) errors.lastName = "Le nom est requis.";
   if (!categories.includes(profile.category)) errors.category = "Choisissez un type de profil.";
@@ -204,6 +225,9 @@ export function cvText(profile: Profile) {
     "",
     displayName(profile),
     profile.headline,
+    ...(profile.category === "Sportif" && ageOn(profile.birthDate) !== null
+      ? [`Âge : ${ageOn(profile.birthDate)} ans`]
+      : []),
     `${profile.sport} · ${profile.city} · ${profile.country}`,
     profile.category === "Sportif" ? profile.gender : profile.accountType,
     ...(profile.category === "Sportif"
@@ -223,6 +247,14 @@ export function cvText(profile: Profile) {
     ...profile.disciplines.flatMap((r) => [
       r.sport + " · " + r.level + " · " + r.ranking,
       [r.position, r.dominantSide].filter(Boolean).join(" · "),
+      [
+        r.paraSport === "yes" ? "Handisport" : "",
+        r.availability,
+        r.availability === "Disponible à partir du" ? r.availableFrom : "",
+        r.contractStatus,
+      ]
+        .filter(Boolean)
+        .join(" · "),
       r.federation,
       ...r.clubs.map(
         (c) => c.name + " · " + c.period + " · " + (c.current ? "Club actuel" : "Ancien club"),
@@ -230,6 +262,10 @@ export function cvText(profile: Profile) {
       "",
     ]),
     "AGENT",
+    ...profile.achievements.flatMap((a) => [
+      "PALMARÈS · DÉCLARÉ",
+      `${a.sport} · ${a.year} · ${a.title} · ${a.event}`,
+    ]),
     profile.agent.status === "none"
       ? "Aucun agent déclaré"
       : profile.agent.name +

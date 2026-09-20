@@ -1,4 +1,5 @@
 "use client";
+import { LanguageSwitch, T, useLocale } from "./locale";
 import { useState, type ReactNode, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -63,6 +64,7 @@ const navigation = [
 function BottomNav() {
   const pathname = usePathname();
   const current = [
+    "/dossier-sportif",
     "/disciplines",
     "/agent",
     "/documents",
@@ -90,7 +92,9 @@ function BottomNav() {
           <span className="bottom-nav-icon">
             <Icon size={22} aria-hidden="true" />
           </span>
-          <span>{label}</span>
+          <span>
+            <T>{label}</T>
+          </span>
         </Link>
       ))}
     </nav>
@@ -106,6 +110,7 @@ export function ProfileLayout({
   back?: string;
   title?: string;
 }) {
+  const { profile } = useDemo();
   return (
     <main id="main" className="profile-layout">
       <header className="app-header">
@@ -123,18 +128,38 @@ export function ProfileLayout({
           )}
         </div>
       </header>
+      <LanguageSwitch />
+      {profile.registrationMode === "child" && (
+        <p className="child-mode-note">
+          <T>{"Profil géré par un représentant"}</T> ·{" "}
+          <T>
+            {
+              "Coordonnées privées du représentant. Les échanges passent par son compte. Vérification parentale simulée, sans valeur de vérification réelle."
+            }
+          </T>
+        </p>
+      )}
       {title && (
         <div className="page-title">
-          <p className="eyebrow">VOTRE ESPACE / ARENA STUDIO</p>
-          <h1>{title}</h1>
+          <p className="eyebrow">
+            <T>{"VOTRE ESPACE / ARENA STUDIO"}</T>
+          </p>
+          <h1>
+            <T>{title}</T>
+          </h1>
         </div>
       )}
       {children}
       <footer className="profile-footer">
-        <span>CONTENUS FICTIFS · DÉMO INTERACTIVE</span>
+        <span>
+          <T>{"CONTENUS FICTIFS · DÉMO INTERACTIVE"}</T>
+        </span>
         <p>
-          Les modifications restent dans cette visite et sont effacées au rechargement. Rien n’est
-          publié.
+          <T>
+            {
+              "Les modifications restent dans cette visite et sont effacées au rechargement. Rien n’est publié."
+            }
+          </T>
         </p>
       </footer>
       <BottomNav />
@@ -251,34 +276,40 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
     <ProfileLayout>
       <div className="profile-heading">
         <div>
-          <p className="eyebrow">LE SPORT VOUS RASSEMBLE</p>
+          <p className="eyebrow">
+            <T>{"LE SPORT VOUS RASSEMBLE"}</T>
+          </p>
           <h1>
-            {tab === "career" ? "Mon parcours" : tab === "media" ? "Mes médias" : "Mon profil"}
+            <T>
+              {tab === "career" ? "Mon parcours" : tab === "media" ? "Mes médias" : "Mon profil"}
+            </T>
             <span className="lime">.</span>
           </h1>
         </div>
         <span className="member-type">
           <i />
-          {profile.category}
+          <T>{profile.category}</T>
         </span>
       </div>
       {tab === "about" && <PlanStatus />}
       {tab !== "about" && (
         <Link className="action secondary" href={tab === "media" ? "/documents" : "/disciplines"}>
-          {tab === "media"
-            ? "Ajouter un document ou une photo"
-            : "Gérer mes sports, niveaux et clubs"}
+          <T>
+            {tab === "media"
+              ? "Ajouter un document ou une photo"
+              : "Gérer mes sports, niveaux et clubs"}
+          </T>
         </Link>
       )}
       <nav className="profile-subnav" aria-label="Rubriques de mon profil">
         <Link href="/profil" aria-current={tab === "about" ? "page" : undefined}>
-          À propos
+          <T>{"À propos"}</T>
         </Link>
         <Link href="/parcours" aria-current={tab === "career" ? "page" : undefined}>
-          Parcours
+          <T>{"Parcours"}</T>
         </Link>
         <Link href="/medias" aria-current={tab === "media" ? "page" : undefined}>
-          Médias
+          <T>{"Médias"}</T>
         </Link>
       </nav>
       <div className="profile-grid">
@@ -290,9 +321,9 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                 alt={`Illustration du profil fictif ${displayName(profile)}`}
               />
               <span className="cover-caption">
-                VOTRE SPORT.
+                <T>{"VOTRE SPORT."}</T>
                 <br />
-                VOTRE HISTOIRE.
+                <T>{"VOTRE HISTOIRE."}</T>
               </span>
               <Button
                 size="icon"
@@ -323,12 +354,13 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
               <span className="sport-chip">{profile.sport}</span>
               <div className="identity-rule" />
               <p className="identity-small">
-                Un parcours singulier.
+                <T>{"Un parcours singulier."}</T>
                 <br />
-                Un terrain de rencontres.
+                <T>{"Un terrain de rencontres."}</T>
               </p>
               <Link href="/modifier-profil" className="profile-edit-link">
-                Modifier mon profil <ArrowUpRight size={16} />
+                <T>{"Modifier mon profil"}</T>
+                <ArrowUpRight size={16} />
               </Link>
             </div>
           </aside>
@@ -345,7 +377,10 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                     : "Compléter mon profil"}
                 </strong>
                 <small>
-                  {progress.count} sur {progress.total} rubriques renseignées.{" "}
+                  {progress.count}
+                  <T>{"sur"}</T>
+                  {progress.total}
+                  <T>{"rubriques renseignées."}</T>{" "}
                   {progress.count === progress.total
                     ? "Personnalisez-le à votre image."
                     : "Chaque détail raconte votre parcours."}
@@ -360,7 +395,8 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                 <article className="info-card">
                   <div className="card-heading">
                     <h3>
-                      <UserRound size={16} /> Ma présentation
+                      <UserRound size={16} />
+                      <T>{"Ma présentation"}</T>
                     </h3>
                     <Link href="/modifier-profil" aria-label="Modifier ma présentation">
                       <Pencil size={15} />
@@ -374,14 +410,17 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                     {profile.skills.length ? (
                       profile.skills.map((s) => <span key={s}>{s}</span>)
                     ) : (
-                      <Link href="/modifier-profil">+ Ajouter mes compétences</Link>
+                      <Link href="/modifier-profil">
+                        <T>{"+ Ajouter mes compétences"}</T>
+                      </Link>
                     )}
                   </div>
                 </article>
                 <article className="info-card">
                   <div className="card-heading">
                     <h3>
-                      <Target size={17} /> Mon prochain mouvement
+                      <Target size={17} />
+                      <T>{"Mon prochain mouvement"}</T>
                     </h3>
                   </div>
                   <p>
@@ -390,22 +429,30 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                   </p>
                   {!profile.objective && (
                     <Link href="/modifier-profil" className="text-link">
-                      Ajouter mon objectif <ArrowRight size={14} />
+                      <T>{"Ajouter mon objectif"}</T>
+                      <ArrowRight size={14} />
                     </Link>
                   )}
                 </article>
                 <button className="cv-card" onClick={download}>
                   <FileText size={28} />
                   <span>
-                    <strong>Mon CV sportif</strong>
-                    <small>Télécharger mon parcours · fichier texte</small>
+                    <strong>
+                      <T>{"Mon CV sportif"}</T>
+                    </strong>
+                    <small>
+                      <T>{"Télécharger mon parcours · fichier texte"}</T>
+                    </small>
                   </span>
                   <Download size={19} />
                 </button>
                 <div className="card-heading section-heading">
-                  <h3>Mes médias</h3>
+                  <h3>
+                    <T>{"Mes médias"}</T>
+                  </h3>
                   <Button variant="ghost" onClick={() => router.push("/medias")}>
-                    Voir tout <ArrowRight size={14} />
+                    <T>{"Voir tout"}</T>
+                    <ArrowRight size={14} />
                   </Button>
                 </div>
                 {profile.media.length ? (
@@ -426,7 +473,8 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                   </div>
                 ) : (
                   <button className="add-media-inline" onClick={() => setMediaOpen(true)}>
-                    <Plus size={18} /> Ajouter mes premiers visuels
+                    <Plus size={18} />
+                    <T>{"Ajouter mes premiers visuels"}</T>
                   </button>
                 )}
               </section>
@@ -434,9 +482,12 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
             {tab === "career" && (
               <section aria-label="Mon parcours" className="tab-body">
                 <div className="card-heading section-heading">
-                  <h3>Chaque étape compte.</h3>
+                  <h3>
+                    <T>{"Chaque étape compte."}</T>
+                  </h3>
                   <Button variant="ghost" onClick={addExperience}>
-                    <Plus size={17} /> Ajouter
+                    <Plus size={17} />
+                    <T>{"Ajouter"}</T>
                   </Button>
                 </div>
                 {profile.experiences.length ? (
@@ -471,7 +522,8 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                     text="Ajoutez une expérience, un club ou une formation. Utilisez des informations fictives pour cette démo."
                     action={
                       <Button onClick={addExperience} className="small-primary">
-                        <Plus size={16} /> Ajouter une étape
+                        <Plus size={16} />
+                        <T>{"Ajouter une étape"}</T>
                       </Button>
                     }
                   />
@@ -479,8 +531,12 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                 <button className="cv-card" onClick={download}>
                   <FileText size={26} />
                   <span>
-                    <strong>Exporter mon CV fictif</strong>
-                    <small>Les informations de ce profil, au format texte.</small>
+                    <strong>
+                      <T>{"Exporter mon CV fictif"}</T>
+                    </strong>
+                    <small>
+                      <T>{"Les informations de ce profil, au format texte."}</T>
+                    </small>
                   </span>
                   <Download size={18} />
                 </button>
@@ -489,14 +545,20 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
             {tab === "media" && (
               <section aria-label="Mes médias" className="tab-body">
                 <div className="card-heading section-heading">
-                  <h3>Votre sport en images.</h3>
+                  <h3>
+                    <T>{"Votre sport en images."}</T>
+                  </h3>
                   <Button variant="ghost" onClick={() => setMediaOpen(true)}>
-                    <Plus size={16} /> Ajouter
+                    <Plus size={16} />
+                    <T>{"Ajouter"}</T>
                   </Button>
                 </div>
                 <p className="section-note">
-                  Galerie de démonstration. Aucun téléversement ni publication.
+                  <T>{"Galerie de démonstration. Aucun téléversement ni publication."}</T>
                 </p>
+                <Link className="action secondary" href="/dossier-sportif">
+                  <T>{"Ajouter des vidéos et distinctions"}</T>
+                </Link>
                 {profile.media.length ? (
                   <div className="media-grid">
                     {profile.media.map((src) => (
@@ -519,7 +581,7 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                     text="Choisissez des visuels de démonstration pour personnaliser votre galerie."
                     action={
                       <Button onClick={() => setMediaOpen(true)} className="small-primary">
-                        Choisir une image
+                        <T>{"Choisir une image"}</T>
                       </Button>
                     }
                   />
@@ -605,7 +667,8 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
             notify("Image retirée de la galerie de démonstration.");
           }}
         >
-          <Trash2 size={16} /> Retirer de ma galerie
+          <Trash2 size={16} />
+          <T>{"Retirer de ma galerie"}</T>
         </Button>
       </Modal>
       <Modal
@@ -640,7 +703,9 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
             placeholder="2023 — Aujourd’hui"
           />
           <div className="field">
-            <label htmlFor="description">En quelques mots</label>
+            <label htmlFor="description">
+              <T>{"En quelques mots"}</T>
+            </label>
             <Textarea
               id="description"
               name="description"
@@ -648,7 +713,9 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
               defaultValue={experience?.description}
             />
           </div>
-          <Submit>Enregistrer cette étape</Submit>
+          <Submit>
+            <T>{"Enregistrer cette étape"}</T>
+          </Submit>
           {experience && (
             <Button
               type="button"
@@ -663,7 +730,8 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                 notify("Étape retirée du parcours de démonstration.");
               }}
             >
-              <Trash2 size={15} /> Retirer cette étape
+              <Trash2 size={15} />
+              <T>{"Retirer cette étape"}</T>
             </Button>
           )}
         </form>
@@ -693,7 +761,8 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
           ))}
         </div>
         <Link href="/modifier-profil" className="action primary">
-          Personnaliser mon profil <Pencil size={16} />
+          <T>{"Personnaliser mon profil"}</T>
+          <Pencil size={16} />
         </Link>
       </Modal>
     </ProfileLayout>
@@ -762,14 +831,19 @@ export function EditProfile() {
         <div className="edit-intro">
           <Pencil size={21} />
           <p>
-            Les bonnes rencontres commencent par un profil qui vous ressemble.
-            <small>Utilisez des informations fictives pour cette démonstration.</small>
+            <T>{"Les bonnes rencontres commencent par un profil qui vous ressemble."}</T>
+            <small>
+              <T>{"Utilisez des informations fictives pour cette démonstration."}</T>
+            </small>
           </p>
         </div>
         <FormErrors errors={errors} />
         <section className="edit-section">
           <h2>
-            01 <span>Votre identité</span>
+            01{" "}
+            <span>
+              <T>{"Votre identité"}</T>
+            </span>
           </h2>
           <div className="field-pair">
             <Field
@@ -798,6 +872,7 @@ export function EditProfile() {
               id="category"
               name="category"
               className="select-field"
+              disabled={draft.registrationMode === "child"}
               value={draft.category}
               onChange={(e) => update("category", e.target.value)}
             >
@@ -829,7 +904,10 @@ export function EditProfile() {
         </section>
         <section className="edit-section">
           <h2>
-            02 <span>Votre univers sportif</span>
+            02{" "}
+            <span>
+              <T>{"Votre univers sportif"}</T>
+            </span>
           </h2>
           <Field
             label="Rôle ou spécialité"
@@ -879,10 +957,15 @@ export function EditProfile() {
         </section>
         <section className="edit-section">
           <h2>
-            03 <span>Votre histoire</span>
+            03{" "}
+            <span>
+              <T>{"Votre histoire"}</T>
+            </span>
           </h2>
           <div className="field">
-            <label htmlFor="bio">Présentation</label>
+            <label htmlFor="bio">
+              <T>{"Présentation"}</T>
+            </label>
             <Textarea
               id="bio"
               name="bio"
@@ -894,7 +977,9 @@ export function EditProfile() {
             <p className="field-hint char-count">{draft.bio.length}/600</p>
           </div>
           <div className="field">
-            <label htmlFor="objective">Votre prochain objectif</label>
+            <label htmlFor="objective">
+              <T>{"Votre prochain objectif"}</T>
+            </label>
             <Textarea
               id="objective"
               name="objective"
@@ -908,9 +993,11 @@ export function EditProfile() {
         </section>
         <div className="save-bar">
           <Link href="/profil" className="action secondary">
-            Annuler
+            <T>{"Annuler"}</T>
           </Link>
-          <Submit>Enregistrer</Submit>
+          <Submit>
+            <T>{"Enregistrer"}</T>
+          </Submit>
         </div>
       </form>
     </ProfileLayout>
@@ -928,30 +1015,42 @@ export function SettingsPage() {
         <section className="info-card">
           <div className="card-heading">
             <h2>
-              <LockKeyhole size={19} /> Une démo transparente.
+              <LockKeyhole size={19} />
+              <T>{"Une démo transparente."}</T>
             </h2>
           </div>
           <p>
-            Aucun compte réel, aucune authentification et aucun message envoyé. Le code e-mail et
-            les identifiants proposés servent uniquement à essayer l’interface.
+            <T>
+              {
+                "Aucun compte réel, aucune authentification et aucun message envoyé. Le code e-mail et les identifiants proposés servent uniquement à essayer l’interface."
+              }
+            </T>
           </p>
           <p>
-            Vos modifications restent en mémoire dans cet onglet et disparaissent au rechargement.
-            Aucun mot de passe saisi n’est conservé.
+            <T>
+              {
+                "Vos modifications restent en mémoire dans cet onglet et disparaissent au rechargement. Aucun mot de passe saisi n’est conservé."
+              }
+            </T>
           </p>
         </section>
         <section className="info-card">
           <div className="card-heading">
             <h2>
-              <UserRound size={19} /> Reprendre le parcours.
+              <UserRound size={19} />
+              <T>{"Reprendre le parcours."}</T>
             </h2>
           </div>
-          <p>Explorez la création d’un nouveau profil ou revenez au profil fictif d’Alex.</p>
+          <p>
+            <T>{"Explorez la création d’un nouveau profil ou revenez au profil fictif d’Alex."}</T>
+          </p>
           <Link href="/inscription" className="text-link">
-            Essayer l’inscription <ArrowRight size={15} />
+            <T>{"Essayer l’inscription"}</T>
+            <ArrowRight size={15} />
           </Link>
           <Button variant="ghost" className="settings-action" onClick={() => setConfirm(true)}>
-            <RotateCcw size={17} /> Réinitialiser la démonstration
+            <RotateCcw size={17} />
+            <T>{"Réinitialiser la démonstration"}</T>
           </Button>
           <Button
             variant="ghost"
@@ -963,7 +1062,8 @@ export function SettingsPage() {
               router.push("/");
             }}
           >
-            <LogOut size={17} /> Quitter le profil de démonstration
+            <LogOut size={17} />
+            <T>{"Quitter le profil de démonstration"}</T>
           </Button>
         </section>
       </div>
@@ -981,10 +1081,11 @@ export function SettingsPage() {
             router.push("/profil");
           }}
         >
-          Réinitialiser la démo <RotateCcw size={17} />
+          <T>{"Réinitialiser la démo"}</T>
+          <RotateCcw size={17} />
         </Button>
         <Button variant="ghost" onClick={() => setConfirm(false)}>
-          Conserver mes modifications
+          <T>{"Conserver mes modifications"}</T>
         </Button>
       </Modal>
     </ProfileLayout>

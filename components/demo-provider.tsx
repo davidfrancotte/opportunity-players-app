@@ -1,10 +1,12 @@
 "use client";
+import { LocaleProvider } from "./locale";
 import {
   createContext,
   useContext,
   useState,
   useReducer,
   useEffect,
+  useRef,
   type Dispatch,
   type ReactNode,
 } from "react";
@@ -56,17 +58,27 @@ type Context = {
 };
 const DemoContext = createContext<Context | null>(null);
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<Profile>(
-    structuredClone(initialProfile),
+  return (
+    <LocaleProvider>
+      <DemoStateProvider>{children}</DemoStateProvider>
+    </LocaleProvider>
   );
+}
+function DemoStateProvider({ children }: { children: ReactNode }) {
+  const [profile, setProfile] = useState<Profile>(structuredClone(initialProfile));
+  const videoURLs = useRef<string[]>([]);
+  useEffect(() => {
+    const next = profile.videos.map((v) => v.url);
+    videoURLs.current
+      .filter((url) => !next.includes(url))
+      .forEach((url) => URL.revokeObjectURL(url));
+    videoURLs.current = next;
+  }, [profile.videos]);
+  useEffect(() => () => videoURLs.current.forEach((url) => URL.revokeObjectURL(url)), []);
   const [draft, setDraft] = useState<Profile | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [notice, setNotice] = useState("");
-  const [trust, dispatchTrust] = useReducer(
-    trustReducer,
-    undefined,
-    createTrustState,
-  );
+  const [trust, dispatchTrust] = useReducer(trustReducer, undefined, createTrustState);
   const [month, setMonth] = useState(() => monthKey());
   useEffect(() => {
     const refresh = () => setMonth(monthKey());
@@ -77,16 +89,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", refresh);
     };
   }, []);
-  const [social, dispatch] = useReducer(
-    guardedSocialReducer,
-    undefined,
-    createSocialState,
-  );
-  const [events, eventDispatch] = useReducer(
-    eventReducer,
-    undefined,
-    createEventState,
-  );
+  const [social, dispatch] = useReducer(guardedSocialReducer, undefined, createSocialState);
+  const [events, eventDispatch] = useReducer(eventReducer, undefined, createEventState);
   function dispatchEvent(action: EventAction) {
     eventDispatch({
       action,
@@ -158,11 +162,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       !action.message.mine &&
       action.message.text.trim() &&
       action.message.text.length <= 1000 &&
-      !accessReason(
-        social,
-        { category: profile.category, month: monthKey() },
-        "receive",
-      )
+      !accessReason(social, { category: profile.category, month: monthKey() }, "receive")
     )
       dispatchEvent({ type: "demo-message" });
   }
@@ -235,10 +235,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           <div className="toast">
             <Check size={17} />
             <span>{notice}</span>
-            <button
-              aria-label="Fermer la notification"
-              onClick={() => setNotice("")}
-            >
+            <button aria-label="Fermer la notification" onClick={() => setNotice("")}>
               <X size={16} />
             </button>
           </div>

@@ -1,12 +1,11 @@
 "use client";
+import { T } from "./locale";
 import Link from "next/link";
 import { Bell, CalendarDays, ArrowUpRight } from "lucide-react";
 import { useDemo } from "./demo-provider";
 export function EventHeader() {
   const { events } = useDemo();
-  const unread = events.notices.filter(
-    (n) => n.recipient === "me" && !n.read,
-  ).length;
+  const unread = events.notices.filter((n) => n.recipient === "me" && !n.read).length;
   return (
     <div className="event-header">
       <Link href="/agenda" className="icon-link" aria-label="Mon agenda">
@@ -23,21 +22,15 @@ export function EventHeader() {
     </div>
   );
 }
-export function NetworkSections({
-  active = "members",
-}: {
-  active?: "members" | "play";
-}) {
+export function NetworkSections({ active = "members" }: { active?: "members" | "play" }) {
   return (
     <nav className="network-sections" aria-label="Rubriques du réseau">
-      <Link
-        href="/reseau"
-        aria-current={active === "members" ? "page" : undefined}
-      >
-        Les membres
+      <Link href="/reseau" aria-current={active === "members" ? "page" : undefined}>
+        <T>{"Les membres"}</T>
       </Link>
       <Link href="/jouer" aria-current={active === "play" ? "page" : undefined}>
-        Jouer ensemble <span>NEW</span>
+        <T>{"Jouer ensemble"}</T>
+        <span>NEW</span>
       </Link>
     </nav>
   );
@@ -51,10 +44,7 @@ export function PlayHomeCard() {
         !m.cancelled &&
         (m.host === "me" ||
           m.replies.some(
-            (r) =>
-              r.user === "me" &&
-              r.status === "approved" &&
-              r.slots.includes(m.confirmed!),
+            (r) => r.user === "me" && r.status === "approved" && r.slots.includes(m.confirmed!),
           )),
     )
     .map((m) => ({ m, slot: m.slots.find((s) => s.id === m.confirmed)! }))
@@ -69,25 +59,32 @@ export function PlayHomeCard() {
   ).length;
   return (
     <section className="play-home">
-      <span className="mini-kicker">DU RÉSEAU AU TERRAIN</span>
+      <span className="mini-kicker">
+        <T>{"DU RÉSEAU AU TERRAIN"}</T>
+      </span>
       <div>
-        <h2>On joue quand ?</h2>
+        <h2>
+          <T>{"On joue quand ?"}</T>
+        </h2>
         <CalendarDays size={27} />
       </div>
-      <p>Un sport. Vos contacts. Le bon créneau.</p>
+      <p>
+        <T>{"Un sport. Vos contacts. Le bon créneau."}</T>
+      </p>
       <div className="play-home-links">
         <Link href="/organiser">
-          Organiser un match <ArrowUpRight size={17} />
+          <T>{"Organiser un match"}</T>
+          <ArrowUpRight size={17} />
         </Link>
         <Link href="/jouer">
-          {invitations
-            ? `${invitations} invitation à découvrir`
-            : "Trouver un match"}
+          {invitations ? `${invitations} invitation à découvrir` : "Trouver un match"}
         </Link>
       </div>
       {upcoming && (
         <Link className="play-upcoming" href={`/match?id=${upcoming.m.id}`}>
-          <small>PROCHAIN RENDEZ-VOUS</small>
+          <small>
+            <T>{"PROCHAIN RENDEZ-VOUS"}</T>
+          </small>
           <strong>{upcoming.m.title}</strong>
           <span>
             {new Intl.DateTimeFormat("fr-BE", {

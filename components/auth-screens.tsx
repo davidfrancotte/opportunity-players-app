@@ -1,4 +1,7 @@
 "use client";
+import { T } from "./locale";
+import { RegistrationFields } from "./sport-profile-fields";
+import { sportProfileIssues } from "@/lib/sport-profile";
 import { FreePlanNote } from "./subscription-ui";
 import { ProfileDirectoryFields } from "./directory-fields";
 import { athleteIssues, normalizeMeasurement } from "@/lib/athlete";
@@ -43,6 +46,9 @@ const value = (form: FormData, key: string) => String(form.get(key) || "").trim(
 export function Signup() {
   const { draft, setDraft, setEmailVerified, dispatchTrust } = useDemo();
   const [identityDefaults] = useState(draft);
+  const [registration, setRegistration] = useState<Profile>(
+    () => draft || createProfile({ firstName: "", lastName: "", email: "" }),
+  );
   const router = useRouter();
   const [errors, setErrors] = useState<Issues>({});
   function submit(e: FormEvent<HTMLFormElement>) {
@@ -53,7 +59,10 @@ export function Signup() {
       lastName: value(data, "lastName"),
       email: value(data, "email"),
     };
-    const issues = validateIdentity(identity, String(data.get("password") || ""));
+    const issues = {
+      ...validateIdentity(identity, String(data.get("password") || "")),
+      ...sportProfileIssues(registration),
+    };
     if (!data.get("policy")) issues.policy = "Prenez connaissance de la notice de confidentialité.";
     if (!data.get("accuracy"))
       issues.accuracy = "Confirmez l’exactitude des informations et le respect de la charte.";
@@ -64,7 +73,12 @@ export function Signup() {
     if (Object.keys(issues).length) return;
     dispatchTrust({ type: "reset" });
     dispatchTrust({ type: "consent", policy: true, accuracy: true });
-    setDraft(createProfile(identity));
+    setDraft({
+      ...createProfile(identity),
+      birthDate: registration.birthDate,
+      registrationMode: registration.registrationMode,
+      guardian: registration.guardian,
+    });
     setEmailVerified(false);
     e.currentTarget.reset();
     router.push("/verification");
@@ -74,15 +88,26 @@ export function Signup() {
       step={1}
       title={
         <>
-          Votre compte,
+          <T>{"Votre compte,"}</T>
           <br />
-          votre départ<span className="lime">.</span>
+          <T>{"votre départ"}</T>
+          <span className="lime">.</span>
         </>
       }
       intro="Un profil gratuit pour donner une nouvelle dimension à votre parcours sportif."
     >
       <form onSubmit={submit} noValidate>
         <FormErrors errors={errors} />
+        <RegistrationFields profile={registration} onChange={setRegistration} errors={errors} />
+        {registration.registrationMode === "child" && (
+          <p className="child-mode-note">
+            <T>
+              {
+                "Les prénom et nom ci-dessous sont ceux de l’enfant. L’adresse e-mail et le compte appartiennent au représentant."
+              }
+            </T>
+          </p>
+        )}
         <div className="field-pair">
           <Field
             label="Prénom"
@@ -123,31 +148,39 @@ export function Signup() {
         <div className="trust-consents">
           <label>
             <input id="policy" name="policy" type="checkbox" required />
-            J’ai pris connaissance de la{" "}
+            <T>{"J’ai pris connaissance de la"}</T>{" "}
             <Link href="/confidentialite" target="_blank" rel="noreferrer">
-              notice de confidentialité de la démo
+              <T>{"notice de confidentialité de la démo"}</T>
             </Link>
             .
           </label>
           <label>
             <input id="accuracy" name="accuracy" type="checkbox" required />
-            J’atteste l’exactitude de mes informations dans le service réel et j’accepte la charte
-            de respect. Pour cette démo, j’utilise uniquement des données fictives.
+            <T>
+              {
+                "J’atteste l’exactitude de mes informations dans le service réel et j’accepte la charte de respect. Pour cette démo, j’utilise uniquement des données fictives."
+              }
+            </T>
           </label>
         </div>
         <div className="inline-note">
           <Mail size={18} />
           <span>
-            Prochaine étape : vérifier votre adresse.
-            <small>La validation sera simulée dans cette démo.</small>
+            <T>{"Prochaine étape : vérifier votre adresse."}</T>
+            <small>
+              <T>{"La validation sera simulée dans cette démo."}</T>
+            </small>
           </span>
         </div>
-        <Submit>Continuer</Submit>
+        <Submit>
+          <T>{"Continuer"}</T>
+        </Submit>
       </form>
       <p className="switch-auth">
-        Déjà membre ?{" "}
+        <T>{"Déjà membre ?"}</T>{" "}
         <Link href="/connexion">
-          Se connecter <ArrowRight size={14} />
+          <T>{"Se connecter"}</T>
+          <ArrowRight size={14} />
         </Link>
       </p>
     </AuthLayout>
@@ -183,9 +216,9 @@ export function VerifyEmail() {
       step={2}
       title={
         <>
-          Votre e-mail,
+          <T>{"Votre e-mail,"}</T>
           <br />
-          votre point de départ.
+          <T>{"votre point de départ."}</T>
         </>
       }
       intro="Un petit geste pour garder les bons contacts."
@@ -193,12 +226,17 @@ export function VerifyEmail() {
       <div className="email-target">
         <Mail size={25} />
         <strong>{draft.email}</strong>
-        <Link href="/inscription">Corriger l’adresse</Link>
+        <Link href="/inscription">
+          <T>{"Corriger l’adresse"}</T>
+        </Link>
       </div>
       <div className="demo-code-note">
-        <span>SIMULATION · AUCUN E-MAIL ENVOYÉ</span>
+        <span>
+          <T>{"SIMULATION · AUCUN E-MAIL ENVOYÉ"}</T>
+        </span>
         <p>
-          Pour essayer cette étape, saisissez <strong>{DEMO_CODE}</strong>.
+          <T>{"Pour essayer cette étape, saisissez"}</T>
+          <strong>{DEMO_CODE}</strong>.
         </p>
       </div>
       <form onSubmit={submit} noValidate>
@@ -224,7 +262,9 @@ export function VerifyEmail() {
             {error}
           </p>
         )}
-        <Submit>Valider le code démo</Submit>
+        <Submit>
+          <T>{"Valider le code démo"}</T>
+        </Submit>
       </form>
       <Button
         variant="ghost"
@@ -237,11 +277,13 @@ export function VerifyEmail() {
           notify("Renvoi simulé : aucun e-mail envoyé. Le code reste 246810.");
         }}
       >
-        <RefreshCw size={15} /> Simuler un nouvel envoi
+        <RefreshCw size={15} />
+        <T>{"Simuler un nouvel envoi"}</T>
       </Button>
       {resends > 0 && (
         <p className="field-hint" role="status">
-          Renvoi simulé. Utilisez toujours le code {DEMO_CODE}.
+          <T>{"Renvoi simulé. Utilisez toujours le code"}</T>
+          {DEMO_CODE}.
         </p>
       )}
     </AuthLayout>
@@ -265,7 +307,7 @@ export function Personalise() {
         intro="Les validations de la démo sont nécessaires avant de poursuivre."
       >
         <Link className="action primary" href={trust.policy ? "/double-facteur" : "/inscription"}>
-          Reprendre la validation
+          <T>{"Reprendre la validation"}</T>
         </Link>
       </AuthLayout>
     );
@@ -274,6 +316,7 @@ export function Personalise() {
     const data = new FormData(e.currentTarget);
     const issues: Issues = {
       ...directoryIssues({ ...discovery, category }),
+      ...sportProfileIssues({ ...discovery, category }),
       ...athleteIssues({ ...discovery, category }),
     };
     if (!value(data, "headline")) issues.headline = "Indiquez votre rôle dans le sport.";
@@ -296,6 +339,9 @@ export function Personalise() {
     if (Object.keys(issues).length) return;
     setDraft({
       ...draft!,
+      birthDate: discovery.birthDate,
+      registrationMode: discovery.registrationMode,
+      guardian: discovery.guardian,
       category,
       country: discovery.country.trim(),
       weightKg: category === "Sportif" ? normalizeMeasurement(discovery.weightKg) : "",
@@ -319,9 +365,10 @@ export function Personalise() {
       step={3}
       title={
         <>
-          Votre place
+          <T>{"Votre place"}</T>
           <br />
-          dans le sport<span className="lime">.</span>
+          <T>{"dans le sport"}</T>
+          <span className="lime">.</span>
         </>
       }
       intro="Plus votre profil vous ressemble, plus les rencontres ont du sens."
@@ -329,7 +376,9 @@ export function Personalise() {
       <form noValidate onSubmit={submit}>
         <FormErrors errors={errors} />
         <fieldset className="role-choices">
-          <legend>Vous êtes…</legend>
+          <legend>
+            <T>{"Vous êtes…"}</T>
+          </legend>
           {categories.map((cat, i) => {
             const Icon = icons[i];
             return (
@@ -338,6 +387,7 @@ export function Personalise() {
                   type="radio"
                   name="category"
                   value={cat}
+                  disabled={discovery.registrationMode === "child" && cat !== "Sportif"}
                   checked={category === cat}
                   onChange={() => {
                     setCategory(cat);
@@ -346,7 +396,9 @@ export function Personalise() {
                   }}
                 />
                 <Icon size={21} />
-                <span>{cat}</span>
+                <span>
+                  <T>{cat}</T>
+                </span>
                 {category === cat && <Check size={14} />}
               </label>
             );
@@ -418,7 +470,9 @@ export function Personalise() {
           maxLength={90}
           error={errors.city}
         />
-        <Submit>Continuer</Submit>
+        <Submit>
+          <T>{"Continuer"}</T>
+        </Submit>
       </form>
     </AuthLayout>
   );
@@ -439,7 +493,7 @@ export function Presentation() {
         intro="Votre parcours d’inscription n’est pas terminé."
       >
         <Link className="action primary" href={trust.policy ? "/double-facteur" : "/inscription"}>
-          Reprendre la validation
+          <T>{"Reprendre la validation"}</T>
         </Link>
       </AuthLayout>
     );
@@ -461,8 +515,9 @@ export function Presentation() {
       step={4}
       title={
         <>
-          Un profil
-          <br />à votre image.
+          <T>{"Un profil"}</T>
+          <br />
+          <T>{"à votre image."}</T>
         </>
       }
       intro="Ajoutez une touche personnelle. Vous pourrez compléter le reste à votre rythme."
@@ -474,8 +529,12 @@ export function Presentation() {
           </p>
         )}
         <fieldset className="photo-choices">
-          <legend>Choisir une illustration de profil</legend>
-          <p className="field-hint">Personnages fictifs, images de démonstration.</p>
+          <legend>
+            <T>{"Choisir une illustration de profil"}</T>
+          </legend>
+          <p className="field-hint">
+            <T>{"Personnages fictifs, images de démonstration."}</T>
+          </p>
           <div>
             {photos.slice(0, 4).map((p) => (
               <label key={p.src} className={photo === p.src ? "selected" : ""}>
@@ -494,7 +553,10 @@ export function Presentation() {
         </fieldset>
         <div className="field">
           <label htmlFor="bio">
-            Quelques mots sur vous <span className="optional">facultatif</span>
+            <T>{"Quelques mots sur vous"}</T>
+            <span className="optional">
+              <T>{"facultatif"}</T>
+            </span>
           </label>
           <Textarea
             id="bio"
@@ -510,11 +572,15 @@ export function Presentation() {
         <div className="ready-card">
           <Check size={19} />
           <span>
-            Le terrain est à vous.
-            <small>Votre profil est prêt à être exploré.</small>
+            <T>{"Le terrain est à vous."}</T>
+            <small>
+              <T>{"Votre profil est prêt à être exploré."}</T>
+            </small>
           </span>
         </div>
-        <Submit>Découvrir mon profil</Submit>
+        <Submit>
+          <T>{"Découvrir mon profil"}</T>
+        </Submit>
       </form>
     </AuthLayout>
   );
@@ -541,9 +607,10 @@ export function Login() {
     <AuthLayout
       title={
         <>
-          Heureux de
+          <T>{"Heureux de"}</T>
           <br />
-          vous revoir<span className="lime">.</span>
+          <T>{"vous revoir"}</T>
+          <span className="lime">.</span>
         </>
       }
       intro="Votre parcours, vos ambitions, votre prochain chapitre."
@@ -565,17 +632,28 @@ export function Login() {
         />
         <Password error={errors.password} />
         <Link href="/mot-de-passe-oublie" className="forgot-link">
-          Mot de passe oublié ?
+          <T>{"Mot de passe oublié ?"}</T>
         </Link>
-        <Submit>Se connecter à la démo</Submit>
+        <Submit>
+          <T>{"Se connecter à la démo"}</T>
+        </Submit>
       </form>
       <p className="switch-auth">
-        Pas encore de profil ? <Link href="/inscription">Créer un compte gratuit</Link>
+        <T>{"Pas encore de profil ?"}</T>
+        <Link href="/inscription">
+          <T>{"Créer un compte gratuit"}</T>
+        </Link>
       </p>
       <div className="demo-access">
-        <span className="eyebrow">POUR ESSAYER EN UN CLIC</span>
-        <strong>Le profil fictif d’Alex vous attend.</strong>
-        <p>Aucune information personnelle nécessaire.</p>
+        <span className="eyebrow">
+          <T>{"POUR ESSAYER EN UN CLIC"}</T>
+        </span>
+        <strong>
+          <T>{"Le profil fictif d’Alex vous attend."}</T>
+        </strong>
+        <p>
+          <T>{"Aucune information personnelle nécessaire."}</T>
+        </p>
         <Button
           type="button"
           variant="secondary"
@@ -585,10 +663,12 @@ export function Login() {
             router.push("/accueil");
           }}
         >
-          Explorer le profil démo <ArrowRight size={17} />
+          <T>{"Explorer le profil démo"}</T>
+          <ArrowRight size={17} />
         </Button>
         <small>
-          Accès formulaire : {DEMO_EMAIL} / {DEMO_PASSWORD}
+          <T>{"Accès formulaire :"}</T>
+          {DEMO_EMAIL} / {DEMO_PASSWORD}
         </small>
       </div>
     </AuthLayout>
@@ -616,9 +696,9 @@ export function ForgotPassword() {
           "Votre accès, en toute simplicité."
         ) : (
           <>
-            On vous remet
+            <T>{"On vous remet"}</T>
             <br />
-            dans le jeu.
+            <T>{"dans le jeu."}</T>
           </>
         )
       }
@@ -631,16 +711,19 @@ export function ForgotPassword() {
       {sent ? (
         <div className="recovery-success" role="status">
           <Mail size={32} />
-          <h2>Envoi simulé.</h2>
+          <h2>
+            <T>{"Envoi simulé."}</T>
+          </h2>
           <p>
-            Aucun e-mail n’a été envoyé. Dans cette démo, le mot de passe reste{" "}
+            <T>{"Aucun e-mail n’a été envoyé. Dans cette démo, le mot de passe reste"}</T>{" "}
             <strong>{DEMO_PASSWORD}</strong>.
           </p>
           <Link href="/connexion" className="action primary">
-            Retour à la connexion <ArrowRight size={18} />
+            <T>{"Retour à la connexion"}</T>
+            <ArrowRight size={18} />
           </Link>
           <Button variant="ghost" onClick={() => setSent(false)}>
-            Essayer une autre adresse
+            <T>{"Essayer une autre adresse"}</T>
           </Button>
         </div>
       ) : (
@@ -661,7 +744,9 @@ export function ForgotPassword() {
               {error}
             </span>
           )}
-          <Submit>Simuler l’envoi du lien</Submit>
+          <Submit>
+            <T>{"Simuler l’envoi du lien"}</T>
+          </Submit>
         </form>
       )}
     </AuthLayout>

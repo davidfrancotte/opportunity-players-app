@@ -1,4 +1,5 @@
 "use client";
+import { T } from "./locale";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -56,9 +57,7 @@ function MemberName({ id }: { id: string }) {
   const { profile } = useDemo();
   return (
     <>
-      {id === "me"
-        ? displayName(profile)
-        : members.find((m) => m.id === id)?.name || "Membre démo"}
+      {id === "me" ? displayName(profile) : members.find((m) => m.id === id)?.name || "Membre démo"}
     </>
   );
 }
@@ -76,11 +75,7 @@ function PremiumCard({ creation = false }: { creation?: boolean }) {
     <section className="event-premium">
       <LockKeyhole size={26} />
       <span className="mini-kicker">JOUEZ PLUS LOIN / PREMIUM</span>
-      <h2>
-        {creation
-          ? "Rassemblez votre équipe."
-          : "Votre prochain match est tout près."}
-      </h2>
+      <h2>{creation ? "Rassemblez votre équipe." : "Votre prochain match est tout près."}</h2>
       <p>
         {creation
           ? "Organiser un match, proposer plusieurs créneaux et inviter vos contacts est réservé aux membres payants."
@@ -96,8 +91,8 @@ function PremiumCard({ creation = false }: { creation?: boolean }) {
         Découvrir Premium <ArrowUpRight size={18} />
       </Link>
       <small>
-        Les invitations reçues personnellement restent accessibles gratuitement.
-        Aucun paiement dans la démo.
+        Les invitations reçues personnellement restent accessibles gratuitement. Aucun paiement dans
+        la démo.
       </small>
     </section>
   );
@@ -132,9 +127,7 @@ function MatchCard({ match: m }: { match: Match }) {
       <p>
         <CalendarDays size={15} />
         {dateLabel(first.start)}
-        {!m.confirmed && m.slots.length > 1
-          ? ` + ${m.slots.length - 1} autre(s)`
-          : ""}
+        {!m.confirmed && m.slots.length > 1 ? ` + ${m.slots.length - 1} autre(s)` : ""}
       </p>
       <div className="match-card-bottom">
         <span>
@@ -171,14 +164,16 @@ export function PlayPage() {
       <div className="event-title">
         <span className="mini-kicker">VOTRE RÉSEAU, SUR LE TERRAIN</span>
         <h1>
-          Jouer ensemble<span>.</span>
+          <T>{"Jouer ensemble"}</T>
+          <span>.</span>
         </h1>
         <p>Moins de messages pour s’organiser. Plus de moments à partager.</p>
       </div>
       <NetworkSections active="play" />
       <Link className="action primary" href="/organiser">
         <Plus size={18} />
-        Organiser un match{!ctx.premium && <LockKeyhole size={15} />}
+        <T>{"Organiser un match"}</T>
+        {!ctx.premium && <LockKeyhole size={15} />}
       </Link>
       <div className="event-tabs" role="group" aria-label="Filtrer les matchs">
         {[
@@ -186,12 +181,7 @@ export function PlayPage() {
           ["organise", "J’organise"],
           ["nearby", "À proximité"],
         ].map(([v, l]) => (
-          <Button
-            key={v}
-            variant="ghost"
-            aria-pressed={tab === v}
-            onClick={() => setTab(v)}
-          >
+          <Button key={v} variant="ghost" aria-pressed={tab === v} onClick={() => setTab(v)}>
             {l}
             {v === "nearby" && !ctx.premium && <LockKeyhole size={12} />}
           </Button>
@@ -202,13 +192,15 @@ export function PlayPage() {
       ) : (
         <>
           <label className="event-select-label">
-            Sport
+            <T>{"Sport"}</T>
             <NativeSelect
               aria-label="Sport"
               value={sport}
               onChange={(e) => setSport(e.target.value)}
             >
-              <NativeSelectOption>Tous</NativeSelectOption>
+              <NativeSelectOption value="Tous">
+                <T>{"Tous"}</T>
+              </NativeSelectOption>
               {sports.map((s) => (
                 <NativeSelectOption key={s}>{s}</NativeSelectOption>
               ))}
@@ -244,8 +236,7 @@ export function PlayPage() {
         </>
       )}
       <p className="event-note">
-        Des rencontres fictives pour tester le parcours. Aucune invitation
-        réelle n’est envoyée.
+        Des rencontres fictives pour tester le parcours. Aucune invitation réelle n’est envoyée.
       </p>
     </ProfileLayout>
   );
@@ -265,9 +256,7 @@ export function CreateMatchPage() {
     [city, setCity] = useState(ctx.city || "Liège"),
     [venue, setVenue] = useState("");
   const [minimum, setMinimum] = useState(suggestedTotals[profile.sport] || 2),
-    [capacity, setCapacity] = useState(
-      Math.max(4, suggestedTotals[profile.sport] || 2),
-    ),
+    [capacity, setCapacity] = useState(Math.max(4, suggestedTotals[profile.sport] || 2)),
     [hostPlays, setHostPlays] = useState(true),
     [open, setOpen] = useState(false),
     [plusOne, setPlusOne] = useState(true),
@@ -280,9 +269,7 @@ export function CreateMatchPage() {
     const q = new URLSearchParams(window.location.search),
       id = q.get("invite");
     if (id && members.some((m) => m.id === id)) setInvitees([id]);
-    const original = events.matches.find(
-      (m) => m.id === q.get("copie") && m.host === "me",
-    );
+    const original = events.matches.find((m) => m.id === q.get("copie") && m.host === "me");
     if (original) {
       setTitle(original.title);
       setSport(original.sport);
@@ -297,8 +284,7 @@ export function CreateMatchPage() {
     }
   }, []); // Copy details only, never the old dates or votes.
   useEffect(() => {
-    if (submitted && events.lastCreated === submitted)
-      router.push(`/match?id=${submitted}`);
+    if (submitted && events.lastCreated === submitted) router.push(`/match?id=${submitted}`);
   }, [submitted, events.lastCreated, router]);
   function next(e: FormEvent) {
     e.preventDefault();
@@ -376,7 +362,7 @@ export function CreateMatchPage() {
                   placeholder="Un padel après le boulot ?"
                 />
                 <label>
-                  Sport
+                  <T>{"Sport"}</T>
                   <NativeSelect
                     aria-label="Sport du match"
                     value={sport}
@@ -441,9 +427,8 @@ export function CreateMatchPage() {
                   />
                 </div>
                 <p className="event-note">
-                  Suggestion {sport} : {suggestedTotals[sport]} participant(s)
-                  au total, modifiable selon votre format. Ce n’est pas une
-                  règle officielle. Organisateur et +1 inclus.
+                  Suggestion {sport} : {suggestedTotals[sport]} participant(s) au total, modifiable
+                  selon votre format. Ce n’est pas une règle officielle. Organisateur et +1 inclus.
                 </p>
                 <label className="event-check">
                   <input
@@ -459,10 +444,9 @@ export function CreateMatchPage() {
               <>
                 <h2>Proposez le choix.</h2>
                 <p className="event-note">
-                  Plusieurs propositions pour un seul match. Les invités
-                  pourront en sélectionner plusieurs ; vous confirmerez un seul
-                  créneau. Saisie dans le fuseau de votre appareil ; affichage
-                  en heure de Bruxelles.
+                  Plusieurs propositions pour un seul match. Les invités pourront en sélectionner
+                  plusieurs ; vous confirmerez un seul créneau. Saisie dans le fuseau de votre
+                  appareil ; affichage en heure de Bruxelles.
                 </p>
                 {slots.map((s, i) => (
                   <fieldset key={s.id} className="slot-form">
@@ -475,9 +459,7 @@ export function CreateMatchPage() {
                       required
                       onChange={(e) =>
                         setSlots(
-                          slots.map((t) =>
-                            t.id === s.id ? { ...t, date: e.target.value } : t,
-                          ),
+                          slots.map((t) => (t.id === s.id ? { ...t, date: e.target.value } : t)),
                         )
                       }
                     />
@@ -490,11 +472,7 @@ export function CreateMatchPage() {
                         required
                         onChange={(e) =>
                           setSlots(
-                            slots.map((t) =>
-                              t.id === s.id
-                                ? { ...t, time: e.target.value }
-                                : t,
-                            ),
+                            slots.map((t) => (t.id === s.id ? { ...t, time: e.target.value } : t)),
                           )
                         }
                       />
@@ -509,9 +487,7 @@ export function CreateMatchPage() {
                         onChange={(e) =>
                           setSlots(
                             slots.map((t) =>
-                              t.id === s.id
-                                ? { ...t, minutes: Number(e.target.value) }
-                                : t,
+                              t.id === s.id ? { ...t, minutes: Number(e.target.value) } : t,
                             ),
                           )
                         }
@@ -521,9 +497,7 @@ export function CreateMatchPage() {
                       <Button
                         type="button"
                         variant="ghost"
-                        onClick={() =>
-                          setSlots(slots.filter((t) => t.id !== s.id))
-                        }
+                        onClick={() => setSlots(slots.filter((t) => t.id !== s.id))}
                       >
                         Retirer cette option
                       </Button>
@@ -545,8 +519,8 @@ export function CreateMatchPage() {
               <>
                 <h2>Qui rejoint le terrain ?</h2>
                 <p className="event-note">
-                  Contacts fictifs. Une invitation personnelle peut recevoir une
-                  réponse même sans abonnement.
+                  Contacts fictifs. Une invitation personnelle peut recevoir une réponse même sans
+                  abonnement.
                 </p>
                 <div className="invite-list">
                   {members.map((m) => (
@@ -589,19 +563,16 @@ export function CreateMatchPage() {
                   Ouvrir aux membres Premium dans les 50 km
                 </label>
                 <p className="event-note">
-                  Les candidatures externes nécessitent votre accord. Un +1 est
-                  lié à son accompagnant et ne reçoit pas de notification
-                  personnelle.
+                  Les candidatures externes nécessitent votre accord. Un +1 est lié à son
+                  accompagnant et ne reçoit pas de notification personnelle.
                 </p>
                 <div className="event-summary">
                   <strong>{title}</strong>
                   <p>
-                    {sport} · {city} · {minimum} à {capacity} participants au
-                    total
+                    {sport} · {city} · {minimum} à {capacity} participants au total
                   </p>
                   <p>
-                    {slots.length} créneau(x) proposé(s) · {invitees.length}{" "}
-                    invité(s)
+                    {slots.length} créneau(x) proposé(s) · {invitees.length} invité(s)
                   </p>
                 </div>
               </>
@@ -614,12 +585,8 @@ export function CreateMatchPage() {
             <EventError />
             <div className="event-form-actions">
               {step > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setStep(step - 1)}
-                >
-                  Retour
+                <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
+                  <T>{"Retour"}</T>
                 </Button>
               )}
               <Button type="submit" className="action primary">
@@ -648,8 +615,8 @@ export function MatchPage() {
           <LockKeyhole size={30} />
           <h1>Match indisponible.</h1>
           <p>
-            Il peut être privé, hors de votre rayon ou réservé à Premium. Les
-            matchs créés dans la démo disparaissent au rechargement.
+            Il peut être privé, hors de votre rayon ou réservé à Premium. Les matchs créés dans la
+            démo disparaissent au rechargement.
           </p>
           <Link className="action primary" href="/jouer">
             Revenir à Jouer
@@ -672,8 +639,7 @@ function MatchDetail({ match: m }: { match: Match }) {
     [simSlot, setSimSlot] = useState(m.slots[0].id),
     [simGuest, setSimGuest] = useState(false),
     [saved, setSaved] = useState(false);
-  const exact =
-    host || m.invitees.includes("me") || reply?.status === "approved";
+  const exact = host || m.invitees.includes("me") || reply?.status === "approved";
   function save() {
     setSaved(true);
     dispatchEvent({
@@ -700,16 +666,14 @@ function MatchDetail({ match: m }: { match: Match }) {
           <MapPin size={17} />
           {m.city}
         </p>
-        <strong>
-          {exact ? m.venue : "Adresse communiquée après acceptation"}
-        </strong>
+        <strong>{exact ? m.venue : "Adresse communiquée après acceptation"}</strong>
         <p>
           <UsersRound size={17} />
           {m.minimum} minimum · {m.capacity} maximum, au total
         </p>
         <small>
-          {m.hostPlays ? "Organisateur inclus" : "Organisateur non participant"}{" "}
-          · {m.plusOne ? "+1 autorisé" : "Sans accompagnant"}
+          {m.hostPlays ? "Organisateur inclus" : "Organisateur non participant"} ·{" "}
+          {m.plusOne ? "+1 autorisé" : "Sans accompagnant"}
         </small>
       </div>
       {!host && !m.cancelled && !m.confirmed && (
@@ -754,9 +718,7 @@ function MatchDetail({ match: m }: { match: Match }) {
                     disabled={!ready || Date.parse(slot.start) <= Date.now()}
                     onClick={() => setConfirmSlot(slot)}
                   >
-                    {ready
-                      ? "Confirmer ce créneau"
-                      : "En attente de participants"}
+                    {ready ? "Confirmer ce créneau" : "En attente de participants"}
                   </Button>
                 )}
                 {!host && !m.confirmed && !m.cancelled && (
@@ -772,8 +734,7 @@ function MatchDetail({ match: m }: { match: Match }) {
                               ? [...selected, slot.id]
                               : selected.filter((id) => id !== slot.id),
                           );
-                          if (!e.target.checked)
-                            setGuests(guests.filter((id) => id !== slot.id));
+                          if (!e.target.checked) setGuests(guests.filter((id) => id !== slot.id));
                         }}
                       />
                       Je suis disponible
@@ -848,9 +809,7 @@ function MatchDetail({ match: m }: { match: Match }) {
           <section className="event-section">
             <h2>Les réponses</h2>
             {!m.replies.length && (
-              <p className="event-note">
-                Vos invités n’ont pas encore répondu.
-              </p>
+              <p className="event-note">Vos invités n’ont pas encore répondu.</p>
             )}
             {m.replies.map((r) => (
               <article className="reply-row" key={r.user}>
@@ -868,9 +827,7 @@ function MatchDetail({ match: m }: { match: Match }) {
                 </small>
                 <small>
                   {r.slots
-                    .map((id) =>
-                      dateLabel(m.slots.find((s) => s.id === id)!.start),
-                    )
+                    .map((id) => dateLabel(m.slots.find((s) => s.id === id)!.start))
                     .join(" / ")}
                 </small>
                 {r.status === "pending" && !m.confirmed && !m.cancelled && (
@@ -907,8 +864,8 @@ function MatchDetail({ match: m }: { match: Match }) {
             <details className="event-demo">
               <summary>Tester les réponses · simulation</summary>
               <p>
-                Simulez un invité ou une candidature externe. Aucun autre
-                utilisateur n’est connecté.
+                Simulez un invité ou une candidature externe. Aucun autre utilisateur n’est
+                connecté.
               </p>
               <label>
                 Membre
@@ -922,9 +879,7 @@ function MatchDetail({ match: m }: { match: Match }) {
                     .map((p) => (
                       <NativeSelectOption key={p.id} value={p.id}>
                         {p.name}
-                        {m.invitees.includes(p.id)
-                          ? " · invité"
-                          : " · candidature"}
+                        {m.invitees.includes(p.id) ? " · invité" : " · candidature"}
                       </NativeSelectOption>
                     ))}
                 </NativeSelect>
@@ -973,11 +928,7 @@ function MatchDetail({ match: m }: { match: Match }) {
             Créer un autre match similaire <Plus size={17} />
           </Link>
           {!m.cancelled && (
-            <Button
-              className="event-cancel"
-              variant="ghost"
-              onClick={() => setCancel(true)}
-            >
+            <Button className="event-cancel" variant="ghost" onClick={() => setCancel(true)}>
               Annuler ce match
             </Button>
           )}
@@ -993,8 +944,7 @@ function MatchDetail({ match: m }: { match: Match }) {
       >
         <p>
           {confirmSlot && dateLabel(confirmSlot.start)} ·{" "}
-          {confirmSlot && countPlayers(m, confirmSlot.id)} participants au
-          total.
+          {confirmSlot && countPlayers(m, confirmSlot.id)} participants au total.
         </p>
         <Button
           className="action primary"
@@ -1044,19 +994,12 @@ export function AgendaPage() {
           : !!m.confirmed &&
             (m.host === "me" ||
               m.replies.some(
-                (r) =>
-                  r.user === "me" &&
-                  r.status === "approved" &&
-                  r.slots.includes(m.confirmed!),
+                (r) => r.user === "me" && r.status === "approved" && r.slots.includes(m.confirmed!),
               ))),
     )
     .flatMap((m) =>
       m.slots
-        .filter(
-          (s) =>
-            (pending || s.id === m.confirmed) &&
-            Date.parse(s.start) > Date.now(),
-        )
+        .filter((s) => (pending || s.id === m.confirmed) && Date.parse(s.start) > Date.now())
         .map((slot) => ({ m, slot })),
     )
     .sort((a, b) => Date.parse(a.slot.start) - Date.parse(b.slot.start));
@@ -1065,32 +1008,21 @@ export function AgendaPage() {
       <div className="event-title">
         <span className="mini-kicker">VOTRE TEMPS DE JEU</span>
         <h1>
-          Mon agenda<span>.</span>
+          <T>{"Mon agenda"}</T>
+          <span>.</span>
         </h1>
         <p>Vos matchs, sans perdre le fil.</p>
       </div>
       <div className="event-tabs">
-        <Button
-          variant="ghost"
-          aria-pressed={!pending}
-          onClick={() => setPending(false)}
-        >
+        <Button variant="ghost" aria-pressed={!pending} onClick={() => setPending(false)}>
           Confirmés
         </Button>
-        <Button
-          variant="ghost"
-          aria-pressed={pending}
-          onClick={() => setPending(true)}
-        >
+        <Button variant="ghost" aria-pressed={pending} onClick={() => setPending(true)}>
           À organiser
         </Button>
       </div>
       {entries.map(({ m, slot }) => (
-        <Link
-          className="agenda-item"
-          key={m.id + slot.id}
-          href={`/match?id=${m.id}`}
-        >
+        <Link className="agenda-item" key={m.id + slot.id} href={`/match?id=${m.id}`}>
           <span className="agenda-date">
             {new Intl.DateTimeFormat("fr", {
               day: "2-digit",
@@ -1120,9 +1052,7 @@ export function AgendaPage() {
           <CalendarDays size={32} />
           <h2>Le terrain vous attend.</h2>
           <p>
-            {pending
-              ? "Aucune proposition à venir."
-              : "Les créneaux confirmés apparaîtront ici."}
+            {pending ? "Aucune proposition à venir." : "Les créneaux confirmés apparaîtront ici."}
           </p>
           <Link href="/jouer" className="action secondary">
             Découvrir mes matchs
@@ -1130,8 +1060,8 @@ export function AgendaPage() {
         </div>
       )}
       <p className="event-note">
-        Agenda de démonstration · heure de Bruxelles. Pas de synchronisation
-        avec un calendrier externe.
+        Agenda de démonstration · heure de Bruxelles. Pas de synchronisation avec un calendrier
+        externe.
       </p>
     </ProfileLayout>
   );
@@ -1139,15 +1069,14 @@ export function AgendaPage() {
 export function NotificationsPage() {
   const { events, dispatchEvent, dispatchSocial, requestAccess } = useDemo();
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const list = events.notices.filter(
-    (n) => n.recipient === "me" && (!unreadOnly || !n.read),
-  );
+  const list = events.notices.filter((n) => n.recipient === "me" && (!unreadOnly || !n.read));
   return (
     <ProfileLayout>
       <div className="event-title">
         <span className="mini-kicker">NE MANQUEZ PAS LE RENDEZ-VOUS</span>
         <h1>
-          Notifications<span>.</span>
+          <T>{"Notifications"}</T>
+          <span>.</span>
         </h1>
       </div>
       <div className="notification-controls">
@@ -1231,14 +1160,10 @@ export function NotificationsPage() {
           Rappels à moins de 24 h et 2 h
         </label>
         <p>
-          Les rappels sont calculés uniquement lorsque cette démo est ouverte.
-          Les notifications push et e-mails nécessiteront le service serveur de
-          la vraie application.
+          Les rappels sont calculés uniquement lorsque cette démo est ouverte. Les notifications
+          push et e-mails nécessiteront le service serveur de la vraie application.
         </p>
-        <Button
-          variant="outline"
-          onClick={() => dispatchEvent({ type: "demo-invite" })}
-        >
+        <Button variant="outline" onClick={() => dispatchEvent({ type: "demo-invite" })}>
           Simuler une invitation reçue
         </Button>
         <Button

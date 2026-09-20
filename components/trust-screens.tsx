@@ -1,4 +1,7 @@
 "use client";
+import { T } from "./locale";
+import { SportProfileSummary } from "./sport-portfolio";
+import { sportProfileIssues } from "@/lib/sport-profile";
 import { PlayerSportFields } from "./directory-fields";
 import { measurementLabel, sideNames } from "@/lib/athlete";
 import { primaryRecord } from "@/lib/directory";
@@ -35,6 +38,7 @@ export function ProfileExtensions() {
   const { profile } = useDemo();
   return (
     <section className="trust-profile">
+      <SportProfileSummary />
       <span className="mini-kicker">VOTRE DOSSIER SPORTIF</span>
       <p className="directory-profile-summary">
         {[
@@ -57,14 +61,20 @@ export function ProfileExtensions() {
       </div>
       {profile.category === "Sportif" && (
         <div className="athlete-profile-facts">
-          <h3>Caractéristiques du sportif</h3>
+          <h3>
+            <T>{"Caractéristiques du sportif"}</T>
+          </h3>
           <dl>
             <div>
-              <dt>Poids</dt>
+              <dt>
+                <T>{"Poids"}</T>
+              </dt>
               <dd>{measurementLabel(profile.weightKg, "kg")}</dd>
             </div>
             <div>
-              <dt>Taille</dt>
+              <dt>
+                <T>{"Taille"}</T>
+              </dt>
               <dd>{measurementLabel(profile.heightCm, "cm")}</dd>
             </div>
             <div>
@@ -73,15 +83,22 @@ export function ProfileExtensions() {
             </div>
           </dl>
           <Link href="/modifier-profil">
-            Modifier mes caractéristiques <ArrowUpRight size={16} />
+            <T>{"Modifier mes caractéristiques"}</T>
+            <ArrowUpRight size={16} />
           </Link>
-          <p className="field-hint">Côté dominant précisé par sport dans votre dossier.</p>
+          <p className="field-hint">
+            <T>{"Côté dominant précisé par sport dans votre dossier."}</T>
+          </p>
         </div>
       )}
       <Link href="/disciplines">
         <span>
-          <strong>Sports, niveaux & clubs</strong>
-          <small>Un parcours distinct par discipline</small>
+          <strong>
+            <T>{"Sports, niveaux & clubs"}</T>
+          </strong>
+          <small>
+            <T>{"Un parcours distinct par discipline"}</T>
+          </small>
         </span>
         <ArrowUpRight size={18} />
       </Link>
@@ -104,21 +121,29 @@ export function ProfileExtensions() {
       </Link>
       <Link href="/documents">
         <span>
-          <strong>CV & références</strong>
-          <small>Documents et justificatifs du parcours</small>
+          <strong>
+            <T>{"CV & références"}</T>
+          </strong>
+          <small>
+            <T>{"Documents et justificatifs du parcours"}</T>
+          </small>
         </span>
         <FileText size={18} />
       </Link>
       <Link href="/parrainage">
         <span>
-          <strong>Inviter mon réseau</strong>
+          <strong>
+            <T>{"Inviter mon réseau"}</T>
+          </strong>
           <small>Gagner des mois Premium · simulation</small>
         </span>
         <UsersRound size={18} />
       </Link>
       <Link href="/securite">
         <span>
-          <strong>Sécurité & modération</strong>
+          <strong>
+            <T>{"Sécurité & modération"}</T>
+          </strong>
           <small>Signalements, blocages et confidentialité</small>
         </span>
         <ShieldCheck size={18} />
@@ -147,6 +172,11 @@ export function DisciplinesPage() {
     }
     if (moderateText(JSON.stringify(records))) {
       setError("Reformulez les informations de manière respectueuse.");
+      return;
+    }
+    const issues = sportProfileIssues({ ...profile, disciplines: records });
+    if (Object.keys(issues).length) {
+      setError(Object.values(issues)[0]);
       return;
     }
     setProfile({
@@ -196,14 +226,9 @@ export function DisciplinesPage() {
               }
               onChange={(e) => update(i, { ranking: e.target.value })}
             />
-            <Field
-              label="Fédération / référentiel"
-              id={`federation-${i}`}
-              value={r.federation}
-              maxLength={100}
-              onChange={(e) => update(i, { federation: e.target.value })}
-            />
-            <h3>Clubs actuels et précédents</h3>
+            <h3>
+              <T>{"Clubs actuels et précédents"}</T>
+            </h3>
             {r.clubs.map((c, n) => (
               <fieldset className="trust-club" key={c.id}>
                 <legend>Club {n + 1}</legend>
@@ -277,7 +302,7 @@ export function DisciplinesPage() {
               }
             >
               <Plus size={16} />
-              Ajouter un club
+              <T>{"Ajouter un club"}</T>
             </Button>
           </section>
         ))}
@@ -311,7 +336,8 @@ export function DisciplinesPage() {
           }
         >
           <Plus size={17} />
-          Ajouter {sport}
+          <T>{"Ajouter"}</T>
+          {sport}
         </Button>
         {error && (
           <p role="alert" className="event-error">
@@ -406,7 +432,7 @@ export function AgentPage() {
         )}
         {error && <p role="alert">{error}</p>}
         <Button className="action primary" type="submit">
-          Enregistrer
+          <T>{"Enregistrer"}</T>
         </Button>
       </form>
       {profile.agent.status !== "none" && (
@@ -1033,7 +1059,7 @@ export function SafetyPage() {
         </p>
       </section>
       <Link className="action secondary" href="/confidentialite">
-        Confidentialité et charte
+        <T>{"Confidentialité et charte"}</T>
       </Link>
     </ProfileLayout>
   );
@@ -1235,10 +1261,15 @@ export function SecondFactorPage() {
       intro="Après l’e-mail, un code d’application d’authentification. Parcours entièrement simulé."
     >
       <div className="demo-code-note">
-        <strong>CODE DE DÉMONSTRATION : 135790</strong>
+        <strong>
+          <T>{"CODE DE DÉMONSTRATION : 135790"}</T>
+        </strong>
         <p>
-          Aucun authentificateur, QR code ou secret réel n’est configuré. Ne saisissez jamais votre
-          propre code.
+          <T>
+            {
+              "Aucun authentificateur, QR code ou secret réel n’est configuré. Ne saisissez jamais votre propre code."
+            }
+          </T>
         </p>
       </div>
       <form
@@ -1263,7 +1294,7 @@ export function SecondFactorPage() {
           error={error}
         />
         <Button type="submit" className="action primary">
-          Valider la seconde étape
+          <T>{"Valider la seconde étape"}</T>
         </Button>
       </form>
     </AuthLayout>
