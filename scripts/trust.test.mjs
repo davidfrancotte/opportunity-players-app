@@ -37,7 +37,7 @@ test("blocked and filtered incoming/outgoing messages neither publish nor consum
       state,
     );
   }
-  assert.equal(remainingMessages(state, context.month), 5);
+  assert.equal(remainingMessages(state, context.month), 3);
   assert.equal(
     guardedSocialReducer(state, {
       context: { ...context, blocked: ["lea"] },

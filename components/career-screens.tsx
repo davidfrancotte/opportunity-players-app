@@ -1,4 +1,5 @@
 "use client";
+import {limits} from '@/lib/entitlements';
 import { useId, useState, useEffect, type ReactNode, type FormEvent } from "react";
 import Link from "next/link";
 import {
@@ -94,6 +95,7 @@ export function CareerFeedback() {
   const { career, dispatchCareer } = useDemo();
   const c = useCopy();
   const messages: Record<string, [string, string]> = {
+    quota:['Cette action dépasse le quota de votre offre. Consultez les formules pour connaître vos accès.','This action exceeds your plan allowance. Check your plan for details.'],
     premium: [
       "Un abonnement Premium professionnel ou collectif est nécessaire pour gérer ces demandes.",
       "A professional or collective Premium plan is required to manage requests.",
@@ -155,6 +157,9 @@ export function CareerNav() {
       className="career-nav"
       aria-label={c("Parcours et rendez-vous", "Career and appointments")}
     >
+      <Link href="/talents">Listes & portefeuille</Link>
+      <Link href="/essais-groupes">Essais groupés</Link>
+      <Link href="/calendrier-avance">Agenda avancé</Link>
       <Link href="/candidatures">
         <BriefcaseBusiness size={17} />
         {c("Candidatures & essais", "Applications & trials")}
@@ -628,7 +633,7 @@ export function RecruitmentPage() {
   const applications = career.applications.filter(
     (a) => offers.some((o) => o.id === a.offerId) && (filter === "all" || a.stage === filter),
   );
-  const access = careerActor.category !== "Sportif" && careerActor.premium;
+  const access = careerActor.category !== "Sportif";
   function createOffer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -1027,7 +1032,7 @@ export function AppointmentsPage() {
         )}
       </div>
       {tab === "slots" && pro ? (
-        careerActor.premium ? (
+        pro ? (
           <>
             <div className="career-section-title">
               <h2>{c("Créneaux de 30 minutes", "30-minute slots")}</h2>
@@ -1074,7 +1079,7 @@ export function AppointmentsPage() {
         ) : (
           <PremiumNotice />
         )
-      ) : tab === "received" && pro && !careerActor.premium ? (
+      ) : tab === "received" && !pro ? (
         <PremiumNotice />
       ) : (
         <div className="career-grid">

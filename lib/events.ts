@@ -1,5 +1,7 @@
 // Client-only demo rules. The production API must enforce the same permissions.
 import { moderateText } from "./trust.ts";
+import { limits, calendarMonth } from './entitlements.ts';
+import type { Category } from './model';
 export const cities: Record<string, [number, number]> = {
   Liège: [50.6326, 5.5797],
   Bruxelles: [50.8503, 4.3517],
@@ -31,6 +33,8 @@ export type Reply = {
   status: "approved" | "pending" | "declined";
 };
 export type Match = {
+  createdAt?:number;
+  level?:string;
   id: string;
   title: string;
   sport: string;
@@ -64,6 +68,7 @@ export type EventNotice = {
     | "message";
 };
 export type EventState = {
+  radius:number;
   matches: Match[];
   notices: EventNotice[];
   error: string;
@@ -72,10 +77,12 @@ export type EventState = {
   reminders: boolean;
   banners: boolean;
 };
-export type EventContext = { premium: boolean; city: string; now: number };
+export type EventContext = { premium: boolean; city: string; now: number; category?:Category; radius?:number };
 export type EventAction =
+  | {type:'discovery';radius:number}
   | { type: "safety-notice"; text: string }
   | { type: "create"; match: Match }
+  | { type: "series"; matches: Match[] }
   | { type: "reply"; id: string; slots: string[]; guests: string[] }
   | { type: "approve" | "decline"; id: string; user: string }
   | { type: "confirm"; id: string; slot: string }
@@ -133,10 +140,10 @@ export function canViewMatch(m: Match, ctx: EventContext) {
     m.host === "me" ||
     m.invitees.includes("me") ||
     m.replies.some((r) => r.user === "me" && r.status === "approved") ||
-    (ctx.premium &&
+    (limits(ctx.category||'Sportif',ctx.premium).discover &&
       m.open &&
       !m.cancelled &&
-      distanceKm(ctx.city, m.city) <= 50)
+      distanceKm(ctx.city, m.city) <= (ctx.premium ? Math.min(500,Math.max(1,ctx.radius||50)) : 50))
   );
 }
 export function createEventState(now = Date.now()): EventState {
@@ -148,6 +155,7 @@ export function createEventState(now = Date.now()): EventState {
     minutes: 90,
   });
   return {
+    radius:50,
     matches: [
       {
         id: "invitation-padel",
@@ -253,6 +261,13 @@ export function eventReducer(
   const s: EventState = structuredClone(state);
   s.error = "";
   const fail = (error: string) => ({ ...state, error });
+  if(a.type==='discovery')return Number.isFinite(a.radius)&&a.radius>=1&&a.radius<=500?{...s,radius:ctx.premium?a.radius:50}:fail('Rayon invalide.');
+  if(a.type==='series') {
+    if(!ctx.premium||!a.matches.length||a.matches.length>12)return fail('Premium permet de créer une série de 1 à 12 rencontres.');
+    let next=state;
+    for(const match of a.matches){next=eventReducer(next,{action:{type:'create',match},context:ctx});if(next.error)return fail(next.error);}
+    return next;
+  }
   if (a.type === "dismiss") {
     s.banner = null;
     return s;
@@ -325,8 +340,8 @@ export function eventReducer(
     return s.notices.length === state.notices.length ? state : s;
   }
   if (a.type === "create") {
-    if (!ctx.premium)
-      return fail("Un abonnement est nécessaire pour organiser un match.");
+    const count=state.matches.filter(m=>m.host==='me'&&(ctx.premium?!m.cancelled&&m.slots.some(t=>Date.parse(t.start)>ctx.now):m.createdAt&&calendarMonth(m.createdAt)===calendarMonth(ctx.now))).length;
+    if(count>=limits(ctx.category||'Sportif',ctx.premium).events)return fail(ctx.premium?'Limite d’événements actifs atteinte.':'Votre événement gratuit du mois a déjà été créé.');
     const m = structuredClone(a.match);
     if (moderateText(m.title + " " + m.venue))
       return fail(
@@ -373,6 +388,7 @@ export function eventReducer(
     if (s.matches.some((e) => e.id === m.id))
       return fail("Ce match existe déjà.");
     m.host = "me";
+    m.createdAt = ctx.now;
     m.replies = [];
     m.confirmed = undefined;
     m.cancelled = false;
@@ -494,7 +510,7 @@ export function eventReducer(
   if (a.type === "reply" || a.type === "simulate") {
     if (
       a.type === "simulate" &&
-      (m.host !== "me" || !ctx.premium || a.user === "me" || m.confirmed)
+      (m.host !== "me" || a.user === "me" || m.confirmed)
     )
       return fail(
         "Simulation réservée à l’organisateur Premium avant confirmation.",
@@ -526,7 +542,7 @@ export function eventReducer(
       !direct &&
       a.type === "reply" &&
       slots.length &&
-      (!ctx.premium || distanceKm(ctx.city, m.city) > 50)
+      (!limits(ctx.category||'Sportif',ctx.premium).discover || distanceKm(ctx.city, m.city) > (ctx.premium ? ctx.radius||50 : 50))
     )
       return fail(
         "La candidature à un match ouvert nécessite Premium et une ville dans les 50 km.",

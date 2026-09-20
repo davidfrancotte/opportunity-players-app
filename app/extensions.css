@@ -1,0 +1,272 @@
+.extension-page {
+  display: grid;
+  gap: 1.4rem;
+  min-width: 0;
+}
+.extension-page h1 {
+  font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin: 1rem 0;
+}
+.extension-page h1 > span {
+  color: #d2ff43;
+}
+.extension-page p {
+  line-height: 1.6;
+}
+.extension-nav {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding: 0.8rem 0 1rem;
+  max-width: 100%;
+  scrollbar-width: thin;
+}
+.extension-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.7rem 1rem;
+  border: 1px solid #46503f;
+  border-radius: 99px;
+  font-size: 0.9rem;
+  color: inherit;
+}
+.extension-nav a:hover {
+  background: #28341d;
+}
+.extension-card {
+  padding: 1.5rem;
+  border: 1px solid #374039;
+  border-radius: 20px;
+  background: #171d1e;
+  min-width: 0;
+  margin-bottom: 1rem;
+}
+.extension-card h2 {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  margin: 0 0 1rem;
+}
+.extension-card h3 {
+  font-size: 1rem;
+  margin: 1rem 0 0.5rem;
+}
+.extension-card p {
+  color: #b8c1b3;
+  font-size: 1rem;
+}
+.extension-card a {
+  color: #d2ff43;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.extension-form {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.extension-form .field {
+  margin: 0;
+}
+.extension-form textarea {
+  min-height: 100px;
+}
+.extension-form fieldset {
+  border: 1px solid #46503f;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.extension-form legend {
+  padding: 0 0.5rem;
+}
+.extension-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.6rem 0;
+  line-height: 1.5;
+  font-size: 1rem;
+}
+.extension-check input {
+  width: 19px;
+  height: 19px;
+  margin-top: 3px;
+  accent-color: #cfff48;
+  flex-shrink: 0;
+}
+.extension-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid #354036;
+  display: grid;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.extension-item:last-child {
+  border-bottom: 0;
+}
+.extension-item small {
+  font-size: 0.875rem;
+  color: #9dab97;
+}
+.extension-item p {
+  margin: 0;
+}
+.extension-actions,
+.extension-response {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+.extension-response {
+  padding: 0.5rem 0;
+}
+.extension-response > span {
+  flex: 1 1 180px;
+}
+.extension-private {
+  padding: 1rem;
+  background: #222d24;
+  border-radius: 12px;
+}
+.extension-inline,
+.extension-simulation {
+  border: 1px solid #384336;
+  padding: 1rem;
+  border-radius: 14px;
+  margin: 1rem 0;
+  font-size: 0.925rem;
+}
+.extension-inline summary,
+.extension-simulation summary {
+  cursor: pointer;
+  line-height: 1.5;
+}
+.extension-inline summary svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+}
+.extension-inline > .extension-form + button {
+  margin: 0.3rem;
+}
+.extension-inline .text-link {
+  display: block;
+  margin-top: 1rem;
+}
+.extension-lock {
+  padding: 1.3rem;
+  border: 1px dashed #718259;
+  border-radius: 16px;
+  background: #20271c;
+}
+.extension-lock strong {
+  color: #d2ff43;
+}
+.extension-lock a {
+  color: #d2ff43;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.extension-error {
+  border: 1px solid #bf875b;
+  background: #35251d;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+}
+.extension-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.extension-metrics > div {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: #252f23;
+  border-radius: 15px;
+}
+.extension-metrics strong {
+  font-size: 2.1rem;
+  color: #d2ff43;
+}
+.extension-metrics span {
+  font-size: 0.9rem;
+}
+.extension-table-wrap {
+  overflow-x: auto;
+}
+.extension-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 280px;
+}
+.extension-table-wrap th,
+.extension-table-wrap td {
+  text-align: left;
+  border-bottom: 1px solid #3d4a38;
+  padding: 0.8rem 0.5rem;
+  font-size: 0.925rem;
+}
+.extension-footnote {
+  font-size: 0.875rem !important;
+  color: #9aa691;
+  line-height: 1.55;
+}
+.extension-results {
+  margin-top: 1rem;
+}
+.extension-results > a {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #384336;
+}
+.extension-card button {
+  white-space: normal;
+  height: auto;
+  min-height: 44px;
+  text-align: left;
+}
+.extension-form button[type="submit"] {
+  justify-content: space-between;
+}
+.extension-page details p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.extension-page input:focus-visible,
+.extension-page button:focus-visible,
+.extension-page a:focus-visible,
+.extension-page summary:focus-visible {
+  outline: 2px solid #d2ff43;
+  outline-offset: 4px;
+}
+@media (max-width: 480px) {
+  .extension-card {
+    padding: 1.1rem;
+  }
+  .extension-actions button {
+    flex: 1 1 auto;
+  }
+  .extension-nav {
+    margin-right: -0.3rem;
+  }
+  .extension-page {
+    gap: 1rem;
+  }
+}

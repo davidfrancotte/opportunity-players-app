@@ -1,0 +1,692 @@
+{
+  "Sportif": [
+    {
+      "feature": "Profil sportif complet",
+      "detail": "Présentation, photo, localisation, biographie et coordonnées selon les préférences de confidentialité.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Profil multisport",
+      "detail": "Plusieurs disciplines avec niveau, classement, poste et parcours propres à chaque sport.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Caractéristiques personnelles et sportives",
+      "detail": "Âge, genre, handisport, taille, poids et main/pied dominant, avec contrôle de leur visibilité.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Disponibilité et situation contractuelle",
+      "detail": "Indiquer sa disponibilité, une date de disponibilité et sa situation : libre, sous contrat, en formation, etc.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Parcours et clubs",
+      "detail": "Présenter ses expériences, clubs actuels et précédents, avec dates et descriptions.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Palmarès et distinctions",
+      "detail": "Ajouter ses résultats, titres et distinctions par discipline.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Licence sportive",
+      "detail": "Renseigner fédération, saison et licence ; numéro privé par défaut.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Relation avec un agent",
+      "detail": "Déclarer son agent et afficher une relation confirmée par les deux parties.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Inscription d’un enfant",
+      "detail": "Profil géré par un représentant, consentements et protections spécifiques.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "CV et documents",
+      "detail": "Déposer son CV et ses références. Payant : jusqu’à 20 documents complémentaires.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Photos sportives",
+      "detail": "Galerie illustrant le parcours. Payant : jusqu’à 50 photos.",
+      "free": "V, limité à 3 photos",
+      "paid": "V"
+    },
+    {
+      "feature": "Vidéos sportives",
+      "detail": "Vidéos de performances ou de présentation, avec limites de poids et durée. Payant : jusqu’à 20 vidéos hébergées.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Fil d’actualité",
+      "detail": "Consulter les publications et filtrer par sport.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Publications",
+      "detail": "Créer des publications. Les commentaires, réactions et partages restent gratuits pour toutes les catégories (clarification du propriétaire).",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Programmation des publications",
+      "detail": "Préparer une publication et choisir sa date de diffusion.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Suivi du réseau",
+      "detail": "Suivre des sportifs, professionnels et collectifs.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche standard",
+      "detail": "Rechercher par sport, pays, ville, catégorie, genre, âge, handisport, niveau et métier/type de structure.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche avancée",
+      "detail": "Combiner poste, latéralité, classement, clubs, disponibilité et situation contractuelle.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Recommandations personnalisées",
+      "detail": "Suggestions de personnes et d’opportunités selon ses sports et sa localisation, avec raisons visibles.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherches enregistrées et alertes",
+      "detail": "Retrouver ses critères favoris. Payant : 10 recherches et alertes sur les nouvelles correspondances.",
+      "free": "V, limité à 1 recherche enregistrée, sans alerte automatique",
+      "paid": "V"
+    },
+    {
+      "feature": "Réception des messages et réponses",
+      "detail": "Recevoir une demande, l’accepter et poursuivre librement la conversation.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Nouvelles prises de contact",
+      "detail": "Envoyer une première demande de conversation à un nouvel interlocuteur. Payant : 30 demandes par mois.",
+      "free": "V, limité à 3 demandes par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Consultation des opportunités",
+      "detail": "Voir toutes les annonces publiées, sans réserver les meilleures aux abonnés.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Candidatures",
+      "detail": "Envoyer son dossier avec consentement et suivre son statut. Payant : 30 candidatures par mois.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Invitations à des essais",
+      "detail": "Recevoir une invitation, répondre et retrouver l’essai dans son agenda.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Demandes de rendez-vous",
+      "detail": "Demander un rendez-vous à un professionnel ; ses créneaux deviennent accessibles après son accord. Payant : 15 demandes par mois.",
+      "free": "V, limité à 1 nouvelles demandes par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Découverte des matchs ouverts",
+      "detail": "Voir les événements proches. Payant : rayon personnalisable et alertes par sport, niveau et créneau.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Participation aux matchs",
+      "detail": "Répondre aux invitations, proposer sa participation, voter pour des dates et indiquer un +1.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Organisation de matchs",
+      "detail": "Définir sport, lieu, horaires, dates proposées, effectif total et invitations. Payant : jusqu’à 10 événements actifs.",
+      "free": "V, limité à 1 événement créé par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Événements récurrents",
+      "detail": "Dupliquer une rencontre et programmer une série régulière.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Agenda et notifications",
+      "detail": "Suivre messages, essais, rendez-vous, matchs et rappels essentiels.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Synchronisation d’agenda",
+      "detail": "Relier un agenda externe et personnaliser les rappels.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Références et avis professionnels",
+      "detail": "Recevoir, afficher et contester une référence liée à une expérience réelle.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Statistiques du profil",
+      "detail": "Suivre visites et interactions. L’identité des visiteurs reste soumise à leurs préférences de confidentialité.",
+      "free": "V, limité au nombre global de visites",
+      "paid": "V"
+    },
+    {
+      "feature": "Parrainage",
+      "detail": "Inviter des contacts et recevoir une récompense Premium après activation qualifiée du filleul.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Sécurité, langues et accès web/mobile",
+      "detail": "Vérification, confidentialité, blocage, signalement, modération, langues disponibles et accès sur les deux supports.",
+      "free": "V",
+      "paid": "V"
+    }
+  ],
+  "Professionnel": [
+    {
+      "feature": "Profil professionnel",
+      "detail": "Présenter métier, spécialités, sports, pays, ville et zone d’intervention.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Qualifications et diplômes",
+      "detail": "Afficher qualifications et justificatifs, en distinguant informations déclarées et vérifiées.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Parcours et références",
+      "detail": "Présenter expériences, collaborations et clubs accompagnés.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Présentation des services",
+      "detail": "Décrire les prestations proposées. Payant : jusqu’à 15 services.",
+      "free": "V, limité à 3 services",
+      "paid": "V"
+    },
+    {
+      "feature": "CV et documents",
+      "detail": "Déposer CV, références et documents professionnels. Payant : jusqu’à 20 documents complémentaires.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Photos et portfolio",
+      "detail": "Présenter son activité et ses réalisations. Payant : jusqu’à 50 photos.",
+      "free": "V, limité à 3 photos",
+      "paid": "V"
+    },
+    {
+      "feature": "Vidéos professionnelles",
+      "detail": "Présentations, démonstrations et contenus sportifs. Payant : jusqu’à 30 vidéos hébergées.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Publications",
+      "detail": "Créer des publications. Les commentaires, réactions et partages restent gratuits pour toutes les catégories (clarification du propriétaire).",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Programmation des publications",
+      "detail": "Planifier la diffusion de ses contenus.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Suivi du réseau",
+      "detail": "Suivre sportifs, professionnels et structures.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche standard de sportifs",
+      "detail": "Filtrer par sport, pays, ville, genre, âge, handisport et niveau général.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche avancée de sportifs",
+      "detail": "Combiner poste, latéralité, classement, clubs, disponibilité et contrat.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche de professionnels et collectifs",
+      "detail": "Filtrer par sport, pays, ville et métier/type de structure.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recommandations personnalisées",
+      "detail": "Découvrir des personnes et opportunités correspondant à son activité.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherches enregistrées et alertes",
+      "detail": "Conserver ses critères. Payant : 20 recherches et alertes sur les nouveaux résultats.",
+      "free": "V, limité à 1 recherche enregistrée, sans alerte automatique",
+      "paid": "V"
+    },
+    {
+      "feature": "Réception des messages et réponses",
+      "detail": "Recevoir des demandes et poursuivre les conversations acceptées.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Nouvelles prises de contact",
+      "detail": "Initier des conversations avec de nouveaux interlocuteurs. Payant : 100 demandes par mois, sous contrôle anti-spam.",
+      "free": "V, limité à 3 demandes par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Consultation des opportunités",
+      "detail": "Consulter les missions, postes et collaborations disponibles.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Candidatures professionnelles",
+      "detail": "Candidater à une mission ou un poste et suivre les réponses. Payant : 30 candidatures par mois.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Publication d’offres de recrutement",
+      "detail": "Publier un besoin de recrutement et recevoir les candidatures. Payant : 5 offres actives.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Traitement simple des candidatures",
+      "detail": "Lire tous les dossiers reçus, répondre et accepter/refuser une candidature.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Espace de recrutement avancé",
+      "detail": "Présélectionner, filtrer, suivre les étapes et conserver l’historique des décisions.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Invitations à des essais",
+      "detail": "Proposer un essai et recevoir la confirmation du candidat.",
+      "free": "V, limité à 5 par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Sessions d’essais groupées",
+      "detail": "Organiser plusieurs sessions et gérer les participants ensemble.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Listes de profils favoris",
+      "detail": "Conserver des profils intéressants. Payant : 20 listes, jusqu’à 1000 profils au total, avec notes privées.",
+      "free": "V, limité à 1 liste de 20 profils",
+      "paid": "V"
+    },
+    {
+      "feature": "Réception de demandes de rendez-vous",
+      "detail": "Afficher le bouton de demande, accepter/refuser et ouvrir ses créneaux après accord. Payant : jusqu’à 100 rendez-vous confirmés par mois.",
+      "free": "V, limité à 3 rendez-vous confirmés par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Gestion avancée des disponibilités",
+      "detail": "Créneaux récurrents, synchronisation externe et gestion simplifiée de l’agenda.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Demander un rendez-vous à un autre professionnel",
+      "detail": "Solliciter un autre intervenant. Payant : 15 nouvelles demandes par mois.",
+      "free": "V, limité à 3 nouvelles demandes par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Relations professionnelles confirmées",
+      "detail": "Afficher les relations légitimes avec sportifs ou structures, notamment pour un agent.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Gestion de portefeuille métier",
+      "detail": "Centraliser dossiers, notes privées et suivi des démarches, selon le métier : agent, coach, scout, etc.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Références et avis sur des expériences",
+      "detail": "Donner une référence justifiée, attribuée à un professionnel identifié ; possibilité de contestation.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Découverte et participation aux matchs",
+      "detail": "Voir les événements locaux, proposer sa participation et répondre aux invitations.",
+      "free": "V, découverte dans un rayon de 50 km",
+      "paid": "V"
+    },
+    {
+      "feature": "Organisation de rencontres",
+      "detail": "Créer des événements privés ou ouverts avec dates, lieu, effectif et validation. Payant : jusqu’à 25 événements actifs.",
+      "free": "V, limité à 1 événement créé par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Duplication et récurrence des événements",
+      "detail": "Réutiliser une organisation et programmer des rencontres régulières.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Agenda et notifications",
+      "detail": "Regrouper rendez-vous, essais, événements et rappels essentiels.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Statistiques professionnelles",
+      "detail": "Suivre visites, contacts, rendez-vous, candidatures et performances des contenus.",
+      "free": "V, limité aux totaux de visites et demandes reçues",
+      "paid": "V"
+    },
+    {
+      "feature": "Parrainage",
+      "detail": "Obtenir du Premium après activation qualifiée de nouveaux membres.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Sécurité, langues et accès web/mobile",
+      "detail": "Vérification, confidentialité, blocage, signalement, modération et langues disponibles.",
+      "free": "V",
+      "paid": "V"
+    }
+  ],
+  "Organisation": [
+    {
+      "feature": "Profil de la structure",
+      "detail": "Présenter club, équipe, fédération, association, université, académie ou sport-études.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Identité, localisation et affiliations",
+      "detail": "Logo, description, pays, ville, lieux de pratique, contacts et affiliations déclarées ou vérifiées.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Présentation multisport",
+      "detail": "Présenter toutes les disciplines pratiquées par la structure.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Présentation des équipes et sections",
+      "detail": "Afficher les différentes équipes ou sections de la structure.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Gestion structurée des équipes",
+      "detail": "Organiser membres, staff, besoins et événements par équipe ou section.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Documents de présentation",
+      "detail": "Présenter projets, références et documents de la structure. Payant : jusqu’à 20 documents.",
+      "free": "V, limité à 1 documents",
+      "paid": "V"
+    },
+    {
+      "feature": "Photos",
+      "detail": "Illustrer installations, équipes et activité sportive. Payant : jusqu’à 30 photos.",
+      "free": "V, limité à 5 photos",
+      "paid": "V"
+    },
+    {
+      "feature": "Vidéos",
+      "detail": "Présenter entraînements, performances ou projets. Payant : jusqu’à 10 vidéos hébergées de max 3 min chacune.",
+      "free": "V, limité à 1 vidéos de 1 min",
+      "paid": "V"
+    },
+    {
+      "feature": "Publications",
+      "detail": "Créer des publications. Les commentaires, réactions et partages restent gratuits pour toutes les catégories (clarification du propriétaire).",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Programmation des publications",
+      "detail": "Organiser à l’avance la communication de la structure.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Développement de la communauté",
+      "detail": "Être suivi et suivre d’autres membres de la plateforme.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Liens avec joueurs et staff",
+      "detail": "Afficher les relations confirmées par les personnes concernées.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche standard de sportifs",
+      "detail": "Filtrer par sport, pays, ville, genre, âge, handisport et niveau général.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche avancée de sportifs",
+      "detail": "Combiner poste, classement, latéralité, clubs, disponibilité et contrat.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherche de staff et partenaires",
+      "detail": "Rechercher par métier/type de structure, sport et localisation.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recommandations personnalisées",
+      "detail": "Découvrir profils et opportunités correspondant aux disciplines de la structure.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Recherches enregistrées et alertes",
+      "detail": "Enregistrer les besoins récurrents. Payant : 30 recherches avec alertes.",
+      "free": "V, limité à 1 recherche enregistrée, sans alerte automatique",
+      "paid": "V"
+    },
+    {
+      "feature": "Réception des messages et réponses",
+      "detail": "Recevoir des demandes et poursuivre librement les conversations acceptées.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Nouvelles prises de contact",
+      "detail": "Initier des échanges avec sportifs, staff ou partenaires. Payant : 200 demandes par mois, partagées entre les gestionnaires.",
+      "free": "V, limité à 5 demandes par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Consultation des opportunités",
+      "detail": "Consulter annonces et propositions de collaboration.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Publication d’offres",
+      "detail": "Publier des recherches de joueurs, staff ou collaborations. Payant : 10 offres actives.",
+      "free": "V, limité à 1 offre active",
+      "paid": "V"
+    },
+    {
+      "feature": "Traitement simple des candidatures",
+      "detail": "Consulter tous les dossiers reçus, répondre et accepter/refuser.",
+      "free": "V, pour l’offre accessible en gratuit",
+      "paid": "V"
+    },
+    {
+      "feature": "Espace de recrutement avancé",
+      "detail": "Filtrer, présélectionner et suivre les candidats par étape et par besoin.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Invitations individuelles à des essais",
+      "detail": "Proposer un essai aux candidats et recevoir leur confirmation.",
+      "free": "V, pour les candidats de l’offre gratuite",
+      "paid": "V"
+    },
+    {
+      "feature": "Sessions d’essais groupées",
+      "detail": "Organiser plusieurs sessions et gérer les participants collectivement.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Viviers de recrutement",
+      "detail": "Conserver des profils pour de futurs besoins. Payant : 30 listes, jusqu’à 1 000 profils au total, avec notes privées.",
+      "free": "V, limité à 1 liste de 20 profils",
+      "paid": "V"
+    },
+    {
+      "feature": "Gestionnaires du compte",
+      "detail": "Permettre à plusieurs personnes de gérer la structure. Payant : 5 gestionnaires inclus.",
+      "free": "V, limité à 1 gestionnaire",
+      "paid": "V"
+    },
+    {
+      "feature": "Collaboration et permissions",
+      "detail": "Attribuer les candidats, échanger des commentaires internes et définir les droits des gestionnaires.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Demandes de rendez-vous auprès de professionnels",
+      "detail": "Solliciter un intervenant et réserver après acceptation. Payant : 20 nouvelles demandes par mois.",
+      "free": "V, limité à 1 nouvelles demandes par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Organisation des entretiens",
+      "detail": "Préparer un entretien avec un candidat. Payant : créneaux partagés et coordination avec le staff.",
+      "free": "V, organisation manuelle par messagerie",
+      "paid": "V"
+    },
+    {
+      "feature": "Découverte et participation aux événements",
+      "detail": "Voir les événements locaux et proposer sa participation. Payant : rayon personnalisable et alertes.",
+      "free": "V, découverte dans un rayon de 50 km",
+      "paid": "V"
+    },
+    {
+      "feature": "Création de matchs et événements",
+      "detail": "Définir dates, horaires, lieu, effectif total, invitations et +1. Payant : jusqu’à 50 événements actifs.",
+      "free": "V, limité à 1 événement créé par mois",
+      "paid": "V"
+    },
+    {
+      "feature": "Duplication et récurrence des événements",
+      "detail": "Programmer des entraînements ou rencontres régulières et réutiliser les invitations.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Agenda et notifications",
+      "detail": "Centraliser événements, essais, entretiens et rappels essentiels.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Agenda partagé et synchronisé",
+      "detail": "Partager l’agenda entre gestionnaires et le relier aux outils externes.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Références et avis",
+      "detail": "Demander des références ; les avis sont attribués à des intervenants identifiés ayant une expérience légitime.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Statistiques de la structure",
+      "detail": "Suivre visibilité, offres, candidatures, délais de réponse et activité de la communauté.",
+      "free": "V, limité aux vues et interactions globales",
+      "paid": "V"
+    },
+    {
+      "feature": "Invitations et parrainage",
+      "detail": "Inviter des membres et obtenir une récompense après activation qualifiée.",
+      "free": "V",
+      "paid": "V"
+    },
+    {
+      "feature": "Suivi collectif des invitations",
+      "detail": "Visualiser les invitations et activations liées à la structure.",
+      "free": "—",
+      "paid": "V"
+    },
+    {
+      "feature": "Sécurité, langues et accès web/mobile",
+      "detail": "Vérification, confidentialité, protection des mineurs, signalement, blocage, modération et langues disponibles.",
+      "free": "V",
+      "paid": "V"
+    }
+  ]
+}

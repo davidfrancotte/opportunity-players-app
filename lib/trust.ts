@@ -262,7 +262,8 @@ export function trustReducer(state: TrustState, a: TrustAction): TrustState {
     return s;
   }
   if (a.type === "document") {
-    if (s.documents.length >= 10) return fail("Maximum 10 documents dans cette démo.");
+    // The category-specific photo/document cap is checked by DemoProvider.
+    if (s.documents.length >= 70) return fail("Capacité maximale de cette démo atteinte.");
     s.documents.unshift(a.document);
     return s;
   }

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { useDemo } from "./demo-provider";
 import { isPremium, remainingMessages, type AccessReason } from "@/lib/social";
 import type { Category } from "@/lib/model";
+import {limits} from "@/lib/entitlements";
 import { monthlyPrice } from "@/lib/pricing";
 
 export const categoryLabel = (category: Category) =>
@@ -21,8 +22,8 @@ export function FreePlanNote({ category }: { category: Category }) {
       </span>
       <p>
         {category === "Sportif"
-          ? "Explorez le réseau et envoyez 5 messages par mois. La publication de posts se débloque avec Premium."
-          : "Présentez votre activité et publiez gratuitement. Premium est nécessaire pour échanger avec les joueurs, recevoir des messages et recevoir des commentaires sur vos posts."}
+          ? "Explorez le réseau, initiez 3 conversations par mois et répondez gratuitement. La création de publications nécessite Premium."
+          : "Présentez votre activité, recevez et répondez gratuitement aux messages. Les nouvelles prises de contact et les outils métier dépendent de votre offre."}
       </p>
       <small>
         <T>{"Premium optionnel :"}</T>
@@ -35,7 +36,7 @@ export function FreePlanNote({ category }: { category: Category }) {
 export function PlanStatus({ compact = false }: { compact?: boolean }) {
   const { profile, social, access } = useDemo();
   const premium = isPremium(social, profile.category);
-  const left = remainingMessages(social, access.month);
+  const left = remainingMessages(social, access.month,profile.category);
   return (
     <Link href="/abonnement" className={compact ? "plan-status compact" : "plan-status"}>
       <span className="plan-icon">
@@ -47,10 +48,10 @@ export function PlanStatus({ compact = false }: { compact?: boolean }) {
         </strong>
         <small>
           {premium
-            ? "Vos échanges sont débloqués dans la démo."
+            ? "Vos outils Premium sont actifs dans la démo."
             : profile.category === "Sportif"
-              ? left + " / 5 messages disponibles ce mois-ci"
-              : "Activez vos échanges avec les joueurs."}
+              ? left + " nouvelles prises de contact disponibles ce mois-ci"
+              : "Réception et réponses gratuites."}
         </small>
         {!premium && (
           <em className="plan-monthly">
@@ -66,11 +67,11 @@ export function PlanStatus({ compact = false }: { compact?: boolean }) {
 export const gateCopy: Record<AccessReason, { title: string; text: string; benefits: string[] }> = {
   publish: {
     title: "Votre parcours mérite d’être partagé.",
-    text: "La publication de posts est réservée aux joueurs Premium. Continuez à explorer gratuitement ou débloquez la possibilité de publier.",
+    text: "La création de publications est incluse dans Premium pour les sportifs et collectifs. Commentaires, réactions et partages restent gratuits.",
     benefits: [
       "Partagez vos moments sportifs",
       "Ajoutez une illustration à vos posts",
-      "Poursuivez vos échanges au-delà de 5 messages",
+      "Initiez davantage de nouvelles conversations",
     ],
   },
   "player-contact": {
@@ -93,9 +94,9 @@ export const gateCopy: Record<AccessReason, { title: string; text: string; benef
   },
   quota: {
     title: "Gardez la conversation ouverte.",
-    text: "Vous avez envoyé vos 5 messages gratuits ce mois-ci. Retrouvez votre quota au début du mois prochain ou découvrez Premium.",
+    text: "Votre quota de nouvelles prises de contact est atteint. Les réponses et les échanges déjà engagés restent accessibles. Le quota est renouvelé au prochain mois civil.",
     benefits: [
-      "Continuez vos échanges sans le quota gratuit",
+      "Augmentez votre quota de nouvelles prises de contact",
       "Publiez dans le fil sportif",
       "Conservez votre profil et votre réseau",
     ],

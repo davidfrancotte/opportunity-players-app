@@ -1,5 +1,23 @@
 "use client";
 import { LocaleProvider, useLocale } from "./locale";
+import { limits } from "@/lib/entitlements";
+import {
+  emptyDirectoryFilters,
+  matchesDirectory,
+  effectiveDirectoryFilters,
+} from "@/lib/directory";
+import { members } from "@/lib/social";
+import { memberSports } from "@/lib/trust";
+import { canViewMatch } from "@/lib/events";
+import {
+  createExtensionState,
+  extensionReducer,
+  workspace,
+  roleCan,
+  type ExtensionAction,
+  type ExtensionState,
+  type Workspace,
+} from "@/lib/extensions";
 import {
   createCareerState,
   careerReducer,
@@ -47,6 +65,10 @@ import {
   type EventState,
 } from "@/lib/events";
 type Context = {
+  extensions: ExtensionState;
+  extensionWorkspace: Workspace;
+  dispatchExtension: (action: ExtensionAction) => void;
+  runScheduled: (through?: number) => void;
   career: CareerState;
   dispatchCareer: (action: CareerAction) => void;
   careerActor: Actor;
@@ -79,7 +101,22 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 }
 function DemoStateProvider({ children }: { children: ReactNode }) {
   const { locale } = useLocale();
-  const [profile, setProfile] = useState<Profile>(structuredClone(initialProfile));
+  const [profile, rawSetProfile] = useState<Profile>(structuredClone(initialProfile));
+  function setProfile(next: Profile) {
+    const cap = limits(next.category, isPremium(social, next.category));
+    if (
+      next.media.length > profile.media.length &&
+      next.media.length + trust.documents.filter((d) => d.kind === "Photo").length > cap.photos
+    ) {
+      setNotice(`Limite : ${cap.photos} photos dans cette offre.`);
+      return;
+    }
+    if (next.videos.length > profile.videos.length && next.videos.length > cap.videos) {
+      setNotice(`Limite : ${cap.videos} vidéos dans cette offre.`);
+      return;
+    }
+    rawSetProfile(next);
+  }
   const videoURLs = useRef<string[]>([]);
   useEffect(() => {
     const next = profile.videos.map((v) => v.url);
@@ -92,7 +129,26 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<Profile | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [notice, setNotice] = useState("");
-  const [trust, dispatchTrust] = useReducer(trustReducer, undefined, createTrustState);
+  const [trust, trustDispatch] = useReducer(trustReducer, undefined, createTrustState);
+  function dispatchTrust(action: TrustAction) {
+    const cap = limits(profile.category, isPremium(social, profile.category));
+    if (action.type === "document") {
+      const photo = action.document.kind === "Photo";
+      const count =
+        trust.documents.filter((d) => (d.kind === "Photo") === photo).length +
+        (photo ? profile.media.length : 0);
+      const max = photo ? cap.photos : cap.documents;
+      if (count >= max) {
+        setNotice(`Limite de votre offre : ${max} ${photo ? "photos" : "documents"}.`);
+        return;
+      }
+    }
+    if (["referral", "referral-step", "activate-reward"].includes(action.type) && !cap.referral) {
+      setNotice("Le parrainage professionnel est inclus dans Premium.");
+      return;
+    }
+    trustDispatch(action);
+  }
   const [month, setMonth] = useState(() => monthKey());
   useEffect(() => {
     const refresh = () => setMonth(monthKey());
@@ -107,8 +163,126 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
   const [events, eventDispatch] = useReducer(eventReducer, undefined, createEventState);
   const [career, careerDispatch] = useReducer(careerReducer, undefined, createCareerState);
   const [careerActorId, setCareerActor] = useState("self");
+  const [extensions, extensionDispatch] = useReducer(
+    extensionReducer,
+    undefined,
+    createExtensionState,
+  );
   const actors = careerActors(profile, isPremium(social, profile.category));
   const careerActor = actors.find((a) => a.id === careerActorId) || actors[0];
+  const extensionKey = `${careerActor.id}:${careerActor.category}`;
+  const extensionWorkspace = workspace(extensions, extensionKey);
+  function dispatchExtension(action: ExtensionAction) {
+    extensionDispatch({
+      action,
+      context: {
+        key: extensionKey,
+        category: careerActor.category,
+        premium: careerActor.premium,
+        now: Date.now(),
+      },
+    });
+  }
+  function runScheduled(through = Date.now()) {
+    // The demo publishes only the current user's drafts, never as another simulated actor.
+    if (careerActor.id !== "self" || !isPremium(social, profile.category)) return;
+    extensionWorkspace.schedules
+      .filter((p) => p.status === "planned" && Date.parse(p.start) <= through)
+      .forEach((p) => {
+        dispatchSocial({
+          type: "post",
+          post: {
+            id: p.id,
+            author: "self",
+            name: careerActor.name,
+            role: profile.category,
+            avatar: profile.photo,
+            sport: p.sport,
+            text: p.text,
+            likes: 0,
+            liked: false,
+            comments: [],
+          },
+        });
+        dispatchExtension({ type: "schedule-status", id: p.id, status: "published" });
+        dispatchExtension({
+          type: "notice",
+          id: `published-${p.id}`,
+          text: "Publication programmée ajoutée au fil de démonstration.",
+          href: "/accueil",
+        });
+      });
+  }
+  useEffect(() => {
+    const timer = window.setInterval(() => runScheduled(), 15000);
+    return () => window.clearInterval(timer);
+  });
+  useEffect(() => {
+    if (!careerActor.premium) return;
+    extensionWorkspace.searches
+      .filter((q) => q.alerts)
+      .forEach((q) => {
+        const f = q.filters;
+        const ids =
+          q.kind === "people"
+            ? members
+                .filter(
+                  (m) =>
+                    !trust.blocked.includes(m.id) &&
+                    matchesDirectory(
+                      m,
+                      memberSports[m.id] || [],
+                      effectiveDirectoryFilters(
+                        { ...emptyDirectoryFilters, ...f },
+                        careerActor.premium,
+                      ),
+                    ),
+                )
+                .map((m) => m.id)
+            : q.kind === "opportunities"
+              ? career.offers
+                  .filter(
+                    (o) =>
+                      o.open &&
+                      !trust.blocked.includes(o.owner) &&
+                      (f.sport === "Tous" || o.sport === f.sport) &&
+                      o.city.toLowerCase().includes((f.city || "").toLowerCase()),
+                  )
+                  .map((o) => o.id)
+              : events.matches
+                  .filter(
+                    (m) =>
+                      m.open &&
+                      !m.cancelled &&
+                      !m.confirmed &&
+                      canViewMatch(m, {
+                        premium: true,
+                        category: careerActor.category,
+                        city: profileCity(f.city || profile.city),
+                        radius: Number(f.radius || 50),
+                        now: Date.now(),
+                      }) &&
+                      (f.sport === "Tous" || m.sport === f.sport) &&
+                      (!f.level || m.level === f.level) &&
+                      m.slots.some(
+                        (t) =>
+                          Date.parse(t.start) > Date.now() &&
+                          (!f.after || new Date(t.start).getHours() >= Number(f.after)),
+                      ),
+                  )
+                  .map((m) => m.id);
+        if (ids.some((id) => !q.seen.includes(id)))
+          dispatchExtension({ type: "search-check", id: q.id, results: ids });
+      });
+  }, [
+    extensionWorkspace.searches,
+    career.offers,
+    events.matches,
+    trust.blocked,
+    careerActor.premium,
+    careerActor.category,
+    profile.city,
+  ]);
   const seenCareerNotices = useRef(new Set<string>());
   useEffect(() => {
     const latest = career.notices.find(
@@ -122,6 +296,14 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
     }
   }, [career.notices, careerActor.id, locale]);
   function dispatchCareer(action: CareerAction) {
+    if (
+      careerActor.category === "Organisation" &&
+      ["offer", "close-offer", "stage"].includes(action.type) &&
+      !roleCan(extensionWorkspace, "recruit")
+    ) {
+      setNotice("Ce gestionnaire ne dispose pas des droits de recrutement.");
+      return;
+    }
     careerDispatch({
       action,
       context: { actor: careerActor, actors, blocked: trust.blocked, now: Date.now() },
@@ -131,6 +313,8 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
     eventDispatch({
       action,
       context: {
+        category: profile.category,
+        radius: events.radius,
         premium: isPremium(social, profile.category),
         city: profileCity(profile.city),
         now: Date.now(),
@@ -213,10 +397,11 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
     return !reason;
   }
   function reset() {
+    dispatchExtension({ type: "reset" });
     dispatchCareer({ type: "reset" });
     setCareerActor("self");
     seenCareerNotices.current.clear();
-    setProfile(structuredClone(initialProfile));
+    rawSetProfile(structuredClone(initialProfile));
     setDraft(null);
     setEmailVerified(false);
     dispatchSocial({ type: "reset" });
@@ -227,6 +412,10 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
   return (
     <DemoContext.Provider
       value={{
+        extensions,
+        extensionWorkspace,
+        dispatchExtension,
+        runScheduled,
         career,
         dispatchCareer,
         careerActor,

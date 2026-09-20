@@ -1,5 +1,6 @@
 import type { Category } from "./model";
 import { moderateText } from "./trust.ts";
+import { limits } from './entitlements.ts';
 export type Member = {
   birthDate?: string;
   id: string;
@@ -231,6 +232,7 @@ export const opportunities: Opportunity[] = [
 export type SocialState = {
   paidCategory: Category | null;
   sentByMonth: Record<string, number>;
+  contactedByMonth?: Record<string,string[]>;
   gate: AccessReason | null;
   posts: Post[];
   following: string[];
@@ -437,7 +439,7 @@ export type AccessContext = {
   month: string;
   blocked?: string[];
 };
-export const FREE_MESSAGES = 5;
+export const FREE_MESSAGES = 3;
 // Fictional recipient plans, not subscription data from the real platform.
 export const unpaidRecipients = ["sam", "united"];
 export function monthKey(date = new Date()) {
@@ -454,10 +456,10 @@ export function isPremium(state: SocialState, category: Category) {
   return state.paidCategory === category;
 }
 export function canReceive(state: SocialState, category: Category) {
-  return category === "Sportif" || isPremium(state, category);
+  return true;
 }
-export function remainingMessages(state: SocialState, month: string) {
-  return Math.max(0, FREE_MESSAGES - (state.sentByMonth[month] || 0));
+export function remainingMessages(state: SocialState, month: string, category:Category='Sportif') {
+  return Math.max(0, limits(category,isPremium(state,category)).contacts - (state.contactedByMonth?.[`${category}:${month}`]?.length || 0));
 }
 export function accessReason(
   state: SocialState,
@@ -466,17 +468,13 @@ export function accessReason(
   targetId?: string,
 ): AccessReason | null {
   const premium = isPremium(state, context.category);
-  if (feature === "publish") return context.category === "Sportif" && !premium ? "publish" : null;
+  if (feature === "publish") return limits(context.category,premium).publish ? null : 'publish';
   if (feature === "receive") return canReceive(state, context.category) ? null : "receive";
-  const target = members.find((m) => m.id === targetId);
-  if (target && unpaidRecipients.includes(target.id)) return "recipient";
-  if (target?.kind === "Joueurs" && context.category !== "Sportif" && !premium)
-    return "player-contact";
+  const established=state.conversations.some(c=>c.memberId===targetId&&c.messages.length>0);
   if (
     feature === "message" &&
-    context.category === "Sportif" &&
-    !premium &&
-    !remainingMessages(state, context.month)
+    !established &&
+    !remainingMessages(state, context.month,context.category)
   )
     return "quota";
   return null;
@@ -543,11 +541,11 @@ export function guardedSocialReducer(
   if (
     action.type === "message" &&
     action.message.mine &&
-    context.category === "Sportif" &&
-    !isPremium(state, context.category)
+    !state.conversations.some(c=>c.memberId===action.id&&c.messages.length>0)
   ) {
     return {
       ...next,
+      contactedByMonth:{...state.contactedByMonth,[`${context.category}:${context.month}`]:[...(state.contactedByMonth?.[`${context.category}:${context.month}`]||[]),action.id]},
       sentByMonth: {
         ...state.sentByMonth,
         [context.month]: (state.sentByMonth[context.month] || 0) + 1,

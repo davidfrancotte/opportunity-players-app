@@ -188,6 +188,11 @@ export const emptyDirectoryFilters: DirectoryFilters = {
   ranking: "",
   query: "",
 };
+export const advancedDirectoryKeys=['position','dominantSide','ranking','club','availability','contractStatus'] as const;
+export function effectiveDirectoryFilters(filters:DirectoryFilters,premium:boolean):DirectoryFilters {
+  if(premium)return filters;
+  const f={...filters};for(const key of advancedDirectoryKeys)f[key]=emptyDirectoryFilters[key];return f;
+}
 export function changeDirectoryKind(filters: DirectoryFilters, kind: string): DirectoryFilters {
   return {
     ...filters,

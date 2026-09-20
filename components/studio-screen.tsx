@@ -1,4 +1,5 @@
 "use client";
+import {ExtensionPage} from './extension-screens';
 import { ApplicationsPage, RecruitmentPage, AppointmentsPage } from "./career-screens";
 import { SportsPortfolioPage } from "./sport-portfolio";
 import { Suspense } from "react";
@@ -31,6 +32,7 @@ import {
 } from "./play-screens";
 export function StudioScreen({ screen }: { screen: string }) {
   switch (screen) {
+    case 'outils': case 'recherches': case 'publications-programmees': case 'talents': case 'essais-groupes': case 'equipes': case 'calendrier-avance': case 'statistiques': return <ExtensionPage section={screen}/>;
     case "candidatures": return <ApplicationsPage />;
     case "recrutement": return <RecruitmentPage />;
     case "rendez-vous": return <AppointmentsPage />;

@@ -23,7 +23,7 @@ test('applications: single submission, restricted dossier, shortlist, invite, ca
 });
 test('recruitment requires premium and matching audience; blocked and closed offers reject application',()=>{
  const s=createCareerState(), offer={...s.offers[0],id:'custom',owner:'self'};
- assert.equal(run(s,'self',{type:'offer',offer}).error,'premium');
+ assert.equal(run(s,'self',{type:'offer',offer}).error,'quota');
  assert.equal(run(s,'lea',{type:'apply',id:'a',offerId:'coach'}).error,'ineligible');
  assert.equal(run(s,'lea',{type:'apply',id:'a',offerId:'padel-trial'},['horizon']).error,'ineligible');
  const closed=run(s,'horizon',{type:'close-offer',id:'padel-trial'});
@@ -41,7 +41,7 @@ test('appointments: no slots or booking before professional accepts; wrong actor
  assert.ok(s.notices.some(n=>n.recipient==='self'));assert.ok(s.notices.some(n=>n.recipient==='marc'));
 });
 test('appointments: double booking, past dates, overlap and unpaid professional blocked; cancellation releases slot',()=>{
- let s=createCareerState();assert.equal(run(s,'self',{type:'request',id:'r',professional:'sam',purpose:appointmentPurposes[0]}).error,'unavailable');
+ let s=createCareerState();assert.equal(run(s,'self',{type:'request',id:'r',professional:'sam',purpose:appointmentPurposes[0]}).error,null);
  assert.equal(run(s,'marc',{type:'slot',slot:{id:'past',professional:'marc',start:'2026-09-01T10:00:00Z',place:'Club'}}).error,'invalid');
  s=run(s,'marc',{type:'slot',slot:{id:'s',professional:'marc',start:'2026-10-01T10:00:00Z',place:'Club'}});
  assert.equal(run(s,'marc',{type:'slot',slot:{id:'s2',professional:'marc',start:'2026-10-01T10:15:00Z',place:'Club'}}).error,'overlap');

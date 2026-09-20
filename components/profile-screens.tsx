@@ -1,4 +1,5 @@
 "use client";
+import {ExtensionNav} from './extension-screens';
 import { LanguageSwitch, T, useLocale } from "./locale";
 import { useState, type ReactNode, type FormEvent } from "react";
 import Link from "next/link";
@@ -1012,6 +1013,7 @@ export function SettingsPage() {
   return (
     <ProfileLayout back="/profil" title="Votre espace, simplement.">
       <div className="settings-grid">
+        <ExtensionNav/>
         <PlanStatus />
         <section className="info-card">
           <div className="card-heading">

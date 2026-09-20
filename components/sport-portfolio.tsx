@@ -1,4 +1,6 @@
 "use client";
+import {limits} from '@/lib/entitlements';
+import {isPremium} from '@/lib/social';
 import { useRef, useState, useEffect, type FormEvent } from "react";
 import Link from "next/link";
 import { useDemo } from "./demo-provider";
@@ -51,7 +53,8 @@ export function SportProfileSummary({ showLink = true }: { showLink?: boolean })
 }
 
 export function SportsPortfolioPage() {
-  const { profile: p, setProfile, notify } = useDemo();
+  const { profile: p, setProfile, notify,social } = useDemo();
+  const cap=limits(p.category,isPremium(social,p.category));
   const { t, locale } = useLocale();
   const [error, setError] = useState("");
   const [videoError, setVideoError] = useState("");
@@ -123,6 +126,7 @@ export function SportsPortfolioPage() {
     setVideoError("");
     setBusy(false);
     if (!file) return;
+    if(p.videos.length>=cap.videos){setVideoError(`Votre offre permet ${cap.videos} vidéo(s). Consultez Premium pour étendre cet accès.`);return;}
     const issue = videoFileIssue(file);
     if (issue) {
       setVideoError(t(issue));
@@ -144,7 +148,7 @@ export function SportsPortfolioPage() {
         resolve(ok);
       }
       video.onloadedmetadata = () =>
-        finish(Number.isFinite(video.duration) && video.duration > 0 && video.duration <= 300);
+        finish(Number.isFinite(video.duration) && video.duration > 0 && video.duration <= cap.videoSeconds);
       video.onerror = () => finish(false);
       video.src = url;
     });
@@ -158,8 +162,8 @@ export function SportsPortfolioPage() {
       pendingURL.current = "";
       setVideoError(
         locale === "en"
-          ? "Unreadable video or longer than 5 minutes."
-          : "Vidéo illisible ou de plus de 5 minutes.",
+          ? `Unreadable video or longer than ${cap.videoSeconds / 60} minutes.`
+          : `Vidéo illisible ou de plus de ${cap.videoSeconds / 60} minutes.`,
       );
       return;
     }
@@ -167,6 +171,7 @@ export function SportsPortfolioPage() {
   }
   function addVideo(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if(p.videos.length>=cap.videos){setVideoError(`Limite : ${cap.videos} vidéos.`);return;}
     const form = e.currentTarget,
       data = new FormData(form);
     const title = String(data.get("videoTitle") || "").trim(),

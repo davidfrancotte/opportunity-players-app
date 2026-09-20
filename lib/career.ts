@@ -1,4 +1,5 @@
 import type { Category, Profile } from "./model";
+import {limits,calendarMonth} from './entitlements.ts';
 import { members, unpaidRecipients, type Member } from "./social.ts";
 import { memberSports, moderateText } from "./trust.ts";
 
@@ -85,6 +86,8 @@ export type Offer = {
   open: boolean;
 };
 export type Application = {
+  createdAt?:number;
+  invitedAt?:number;
   id: string;
   offerId: string;
   candidate: string;
@@ -95,6 +98,9 @@ export type Application = {
   trial?: { start: string; place: string };
 };
 export type Appointment = {
+  respondedAt?:number;
+  createdAt?:number;
+  bookedAt?:number;
   id: string;
   requester: string;
   professional: string;
@@ -188,6 +194,7 @@ export type CareerAction =
   | { type: "respond"; id: string; accept: boolean }
   | { type: "slot"; slot: Slot }
   | { type: "remove-slot"; id: string }
+  | { type: "slots-series"; slots: Slot[] }
   | { type: "book"; id: string; slot: string }
   | { type: "cancel"; id: string };
 export type CareerContext = { actor: Actor; actors: Actor[]; blocked: string[]; now: number };
@@ -224,7 +231,9 @@ export function careerReducer(
   } = command;
   const fail = (code: string) => ({ ...state, error: code });
   const base = { ...state, error: null };
-  const recruiter = actor.category !== "Sportif" && actor.premium;
+  const recruiter = actor.category !== "Sportif";
+  const quota=limits(actor.category,actor.premium);
+  const inMonth=(at?:number)=>!!at&&calendarMonth(at)===calendarMonth(now);
   const allowed = (id: string) => !blocked.includes(id);
   const notify = (next: CareerState, recipient: string, fr: string, en: string, href: string) => ({
     ...next,
@@ -235,6 +244,10 @@ export function careerReducer(
   });
   if (action.type === "reset") return createCareerState();
   if (action.type === "clear-error") return base;
+  if(action.type==='slots-series'){
+    if(!actor.premium||!action.slots.length||action.slots.length>12)return fail('premium');
+    let next=state;for(const slot of action.slots){next=careerReducer(next,{action:{type:'slot',slot},context:command.context});if(next.error)return fail(next.error);}return next;
+  }
   if (action.type === "preferences")
     return {
       ...base,
@@ -251,7 +264,7 @@ export function careerReducer(
     };
   if (action.type === "offer") {
     const o = action.offer;
-    if (!recruiter) return fail("premium");
+    if (!recruiter||state.offers.filter(x=>x.owner===actor.id&&x.open).length>=quota.offers) return fail("quota");
     if (
       o.owner !== actor.id ||
       state.offers.some((x) => x.id === o.id) ||
@@ -275,13 +288,14 @@ export function careerReducer(
     };
   }
   if (action.type === "apply") {
+    if(state.applications.filter(a=>a.candidate===actor.id&&inMonth(a.createdAt)).length>=quota.applications)return fail('quota');
     const o = state.offers.find((o) => o.id === action.offerId);
     if (
       !o?.open ||
       o.owner === actor.id ||
       !allowed(o.owner) ||
       o.audience !== actor.category ||
-      !actors.some((a) => a.id === o.owner && a.premium)
+      !actors.some((a) => a.id === o.owner)
     )
       return fail("ineligible");
     if (
@@ -298,6 +312,7 @@ export function careerReducer(
         applications: [
           {
             id: action.id,
+            createdAt:now,
             offerId: o.id,
             candidate: actor.id,
             name: actor.name,
@@ -320,6 +335,8 @@ export function careerReducer(
     if (!a || !o || !allowed(a.candidate) || !allowed(o.owner)) return fail("forbidden");
     const own = a.candidate === actor.id;
     const hiring = o.owner === actor.id && recruiter;
+    if(hiring&&action.stage==='shortlisted'&&!actor.premium)return fail('premium');
+    if(hiring&&action.stage==='invited'&&actor.category==='Professionnel'&&!actor.premium&&state.applications.filter(x=>inMonth(x.invitedAt)&&state.offers.some(o=>o.id===x.offerId&&o.owner===actor.id)).length>=5)return fail('quota');
     if (["declined", "withdrawn"].includes(a.stage)) return fail("transition");
     if (
       action.stage === "withdrawn"
@@ -355,7 +372,7 @@ export function careerReducer(
             ? {
                 ...x,
                 stage: action.stage,
-                ...(action.stage === "invited" ? { trial: action.trial } : {}),
+                ...(action.stage === "invited" ? { trial: action.trial, invitedAt:now } : {}),
               }
             : x,
         ),
@@ -367,11 +384,11 @@ export function careerReducer(
     );
   }
   if (action.type === "request") {
+    if(state.appointments.filter(a=>a.requester===actor.id&&inMonth(a.createdAt)).length>=quota.appointments)return fail('quota');
     const pro = actors.find((a) => a.id === action.professional);
     if (
       !pro ||
       pro.category !== "Professionnel" ||
-      !pro.premium ||
       actor.id === pro.id ||
       !allowed(pro.id)
     )
@@ -395,6 +412,7 @@ export function careerReducer(
           {
             id: action.id,
             requester: actor.id,
+            createdAt:now,
             professional: pro.id,
             purpose: action.purpose,
             status: "pending",
@@ -414,7 +432,6 @@ export function careerReducer(
       !a ||
       a.professional !== actor.id ||
       actor.category !== "Professionnel" ||
-      !actor.premium ||
       !allowed(a.requester) ||
       a.status !== "pending"
     )
@@ -423,7 +440,7 @@ export function careerReducer(
       {
         ...base,
         appointments: state.appointments.map((x) =>
-          x.id === a.id ? { ...x, status: action.accept ? "accepted" : "declined" } : x,
+          x.id === a.id ? { ...x, status: action.accept ? "accepted" : "declined",respondedAt:now } : x,
         ),
       },
       a.requester,
@@ -436,7 +453,7 @@ export function careerReducer(
   }
   if (action.type === "slot") {
     const s = action.slot;
-    if (actor.category !== "Professionnel" || !actor.premium || s.professional !== actor.id)
+    if (actor.category !== "Professionnel" || s.professional !== actor.id)
       return fail("premium");
     if (!future(s.start, now) || !clean(s.place)) return fail("invalid");
     if (
@@ -463,12 +480,13 @@ export function careerReducer(
     const pro = actors.find((p) => p.id === a?.professional);
     if (
       !a ||
-      !pro?.premium ||
+      !pro ||
       !allowed(pro.id) ||
       !availableSlots(state, a, actor.id, now).some((s) => s.id === action.slot)
     )
       return fail("slot");
     const chosen = state.slots.find((s) => s.id === action.slot)!;
+    if(state.appointments.filter(x=>x.professional===pro!.id&&inMonth(x.bookedAt)).length>=limits(pro!.category,pro!.premium).appointmentsReceived)return fail('quota');
     if (
       state.appointments.some(
         (x) =>
@@ -483,7 +501,7 @@ export function careerReducer(
         {
           ...base,
           appointments: state.appointments.map((x) =>
-            x.id === a.id ? { ...x, status: "booked", slot: action.slot } : x,
+            x.id === a.id ? { ...x, status: "booked", slot: action.slot,bookedAt:now } : x,
           ),
         },
         pro.id,

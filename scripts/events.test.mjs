@@ -38,14 +38,15 @@ function event(overrides = {}) {
 const create = (m = event()) =>
   act(createEventState(now), { type: "create", match: m });
 const match = (s) => s.matches.find((m) => m.id === "test");
-test("création Premium uniquement, y compris dans le reducer", () => {
+test("gratuit : un événement créé par mois ; les créations suivantes sont refusées", () => {
   const s = act(
     createEventState(now),
     { type: "create", match: event() },
     free,
   );
-  assert.match(s.error, /abonnement/);
-  assert.equal(s.matches.length, 3);
+  assert.equal(s.error, '');
+  assert.equal(s.matches.length, 4);
+  assert.match(act(s,{type:'create',match:event({id:'second'})},free).error,/gratuit/);
   assert.equal(create().matches.length, 4);
 });
 test("matchs ouverts : abonnement et rayon 50km, URL directe comprise", () => {

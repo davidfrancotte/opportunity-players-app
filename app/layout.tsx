@@ -1,5 +1,6 @@
 import "./sport-profile.css";
 import "./career.css";
+import './extensions.css';
 import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
