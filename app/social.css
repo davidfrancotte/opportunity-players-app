@@ -652,6 +652,10 @@
 .opportunity-detail li {
   margin-bottom: 8px;
 }
+/* Keep the media/career action separate from the profile navigation. */
+.profile-layout > .action + .profile-subnav {
+  margin-top: 20px;
+}
 .profile-subnav {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
