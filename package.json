@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/model.test.mjs scripts/social.test.mjs scripts/subscription.test.mjs scripts/events.test.mjs scripts/trust.test.mjs",
+    "test": "node --test scripts/model.test.mjs scripts/social.test.mjs scripts/subscription.test.mjs scripts/events.test.mjs scripts/trust.test.mjs scripts/directory.test.mjs",
     "test:http": "node scripts/validate-http.mjs"
   },
   "dependencies": {

@@ -1,5 +1,24 @@
 # Validation de la livraison Arena Studio
 
+## 20 septembre 2026 : poids, taille et latéralité du sportif
+
+- Champs facultatifs Poids (kg) et Taille (cm) dans l’inscription et l’édition, sans valeur inventée. Saisie décimale avec point ou virgule, validation des valeurs et possibilité d’effacer.
+- Affichage dédié sur le profil sportif, lien de modification et inclusion des mesures renseignées dans le CV texte. Masqués pour les professionnels et organisations.
+- Libellés Gaucher / gauchère, Droitier / droitière et Ambidextre pour le côté dominant par discipline, compatible avec les filtres existants.
+- 54 tests unitaires réussis et vérification TypeScript. Recette navigateur : valeur négative refusée, 72,5 kg et 180 cm enregistrés et réaffichés, suppression possible, données conservées à l’inscription d’un sportif et non demandées aux autres catégories.
+- Nouvelle interface vérifiée en viewport mobile ; comportement toujours limité à la session de démonstration. Aucun déploiement effectué.
+
+## 20 septembre 2026 : recherche par catégorie et champs de profil
+
+- 53 tests unitaires réussis, TypeScript et build Next.js de production validés.
+- Réseau joueurs : sport, genre, pays, ville, niveau, position et côté dominant ; club et classement conservés.
+- Professionnels : sport, pays, ville et 26 métiers. Collectifs : mêmes filtres géographiques et 7 types de structures.
+- Inscription et modification utilisent le même vocabulaire que les filtres. Niveau, position et côté dominant sont propres à chaque discipline ; aucun croisement de critères entre deux sports.
+- Recette navigateur à 390 px : filtres cumulés, aucun résultat, remise à zéro des critères spécifiques au changement de catégorie, édition d’un sportif, inscription complète des trois catégories et validation du type de compte requis.
+- Pas de débordement horizontal du Réseau à 320, 390 et 430 px. Captures des formulaires et des filtres vérifiées. Tests sur Chrome avec viewport mobile, pas sur appareils physiques.
+- Pays saisi librement avec suggestions ; recherche normalisée (accents et casse), pas de géocodage ni de validation d’adresse externe.
+- Champs et filtres restent dans la démo locale ; aucun backend, push GitHub ou déploiement Netlify effectué pour cette mise à jour.
+
 19 septembre 2026.
 
 ## Mise à jour : confiance et dossier multisport

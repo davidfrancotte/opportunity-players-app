@@ -1,11 +1,5 @@
 // Demonstration only. Neither these rules nor the client state are security controls.
-export const levels = [
-  "Débutant",
-  "Loisir",
-  "Intermédiaire",
-  "Compétition",
-  "Professionnel",
-];
+export const levels = ["Débutant", "Loisir", "Intermédiaire", "Compétition", "Professionnel"];
 export type ClubRecord = {
   id: string;
   name: string;
@@ -14,6 +8,8 @@ export type ClubRecord = {
 };
 export type SportRecord = {
   sport: string;
+  position?: string;
+  dominantSide?: string;
   level: string;
   ranking: string;
   federation: string;
@@ -99,14 +95,9 @@ export function moderateText(text: string): string | null {
   const value = normalizeText(text);
   if (/\[test racisme\]|\b(sale race|retourne dans ton pays)\b/.test(value))
     return "Propos racistes ou discriminatoires";
-  if (
-    /\[test sexisme\]|\b(les femmes sont nulles|les femmes ne savent pas jouer)\b/.test(
-      value,
-    )
-  )
+  if (/\[test sexisme\]|\b(les femmes sont nulles|les femmes ne savent pas jouer)\b/.test(value))
     return "Propos sexistes";
-  if (/\[test menace\]|\b(je vais te tuer|je vais te frapper)\b/.test(value))
-    return "Menace";
+  if (/\[test menace\]|\b(je vais te tuer|je vais te frapper)\b/.test(value)) return "Menace";
   if (/\[test harcelement\]|\b(ferme ta gueule|sale merde)\b/.test(value))
     return "Insulte ou harcèlement";
   return null;
@@ -117,8 +108,7 @@ export function fileDecision(
   size: number,
   kind: DocumentRecord["kind"],
 ) {
-  if (size <= 0 || size > 10 * 1024 * 1024)
-    return "Fichier vide ou supérieur à 10 Mo.";
+  if (size <= 0 || size > 10 * 1024 * 1024) return "Fichier vide ou supérieur à 10 Mo.";
   if (kind === "Photo")
     return /\.(jpg|jpeg|png|webp)$/i.test(name) &&
       ["image/jpeg", "image/png", "image/webp"].includes(type)
@@ -129,9 +119,22 @@ export function fileDecision(
     : "Choisissez un document PDF (10 Mo maximum).";
 }
 export const memberSports: Record<string, SportRecord[]> = {
+  ines: [
+    {
+      sport: "Football",
+      level: "Compétition",
+      position: "Gardien",
+      dominantSide: "Droite",
+      ranking: "Régional · exemple",
+      federation: "France · déclaration fictive",
+      clubs: [],
+    },
+  ],
   lea: [
     {
       sport: "Tennis",
+      position: "Double",
+      dominantSide: "Droite",
       level: "Compétition",
       ranking: "C15.2 · exemple",
       federation: "Belgique · déclaration fictive",
@@ -146,6 +149,8 @@ export const memberSports: Record<string, SportRecord[]> = {
     },
     {
       sport: "Padel",
+      position: "Joueur à gauche",
+      dominantSide: "Gauche",
       level: "Intermédiaire",
       ranking: "P200 · exemple",
       federation: "Belgique · déclaration fictive",
@@ -162,6 +167,8 @@ export const memberSports: Record<string, SportRecord[]> = {
   noah: [
     {
       sport: "Basketball",
+      position: "Ailier",
+      dominantSide: "Ambidextre",
       level: "Compétition",
       ranking: "Régional · exemple",
       federation: "Belgique · déclaration fictive",
@@ -176,6 +183,8 @@ export const memberSports: Record<string, SportRecord[]> = {
     },
     {
       sport: "Football",
+      position: "Gardien",
+      dominantSide: "Gauche",
       level: "Loisir",
       ranking: "Amateur · exemple",
       federation: "",
@@ -202,10 +211,7 @@ export function matchesSportRecords(
       (sport === "Tous" || r.sport === sport) &&
       (level === "Tous" || r.level === level) &&
       (!ranking || normalizeText(r.ranking).includes(normalizeText(ranking))) &&
-      (!club ||
-        r.clubs.some((c) =>
-          normalizeText(c.name).includes(normalizeText(club)),
-        )),
+      (!club || r.clubs.some((c) => normalizeText(c.name).includes(normalizeText(club)))),
   );
 }
 export type TrustAction =
@@ -247,8 +253,7 @@ export function trustReducer(state: TrustState, a: TrustAction): TrustState {
     return s;
   }
   if (a.type === "document") {
-    if (s.documents.length >= 10)
-      return fail("Maximum 10 documents dans cette démo.");
+    if (s.documents.length >= 10) return fail("Maximum 10 documents dans cette démo.");
     s.documents.unshift(a.document);
     return s;
   }
@@ -296,9 +301,7 @@ export function trustReducer(state: TrustState, a: TrustAction): TrustState {
     return s;
   }
   if (a.type === "review-status") {
-    s.reviews = s.reviews.map((r) =>
-      r.id === a.id ? { ...r, status: a.status } : r,
-    );
+    s.reviews = s.reviews.map((r) => (r.id === a.id ? { ...r, status: a.status } : r));
     return s;
   }
   if (a.type === "referral") {

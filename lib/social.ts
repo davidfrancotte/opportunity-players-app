@@ -7,12 +7,53 @@ export type Member = {
   role: string;
   sport: string;
   city: string;
+  country: string;
+  gender?: string;
+  accountType?: string;
   image: string;
   bio: string;
 };
 export const members: Member[] = [
   {
+    id: "ines",
+    name: "Inès Martin",
+    kind: "Joueurs",
+    role: "Gardienne · Football",
+    sport: "Football",
+    city: "Lille",
+    country: "France",
+    gender: "Femme",
+    image: "/images/football-color.webp",
+    bio: "Profil fictif : gardienne à la recherche d’un collectif et de séances spécifiques.",
+  },
+  {
+    id: "camille",
+    name: "Camille Roy",
+    kind: "Professionnels",
+    role: "Entraîneur de gardiens",
+    accountType: "Entraîneur de gardiens",
+    sport: "Football",
+    city: "Montréal",
+    country: "Canada",
+    image: "/images/coach.webp",
+    bio: "Profil fictif : accompagnement technique des gardiens et gardiennes.",
+  },
+  {
+    id: "academie",
+    name: "Académie du Nord",
+    kind: "Collectives",
+    role: "Formation sportive",
+    accountType: "Académie",
+    sport: "Football",
+    city: "Lille",
+    country: "France",
+    image: "/images/football-color.webp",
+    bio: "Structure fictive dédiée à la formation et aux rencontres sportives.",
+  },
+  {
     id: "lea",
+    country: "Belgique",
+    gender: "Femme",
     name: "Léa Moreau",
     kind: "Joueurs",
     role: "Joueuse de tennis",
@@ -23,6 +64,8 @@ export const members: Member[] = [
   },
   {
     id: "noah",
+    country: "Belgique",
+    gender: "Homme",
     name: "Noah Laurent",
     kind: "Joueurs",
     role: "Ailier · Basketball",
@@ -33,6 +76,8 @@ export const members: Member[] = [
   },
   {
     id: "horizon",
+    country: "Belgique",
+    accountType: "Club",
     name: "Horizon Padel",
     kind: "Collectives",
     role: "Club & communauté",
@@ -43,6 +88,8 @@ export const members: Member[] = [
   },
   {
     id: "sam",
+    country: "Belgique",
+    accountType: "Préparateur physique",
     name: "Sam Delcourt",
     kind: "Professionnels",
     role: "Préparateur physique",
@@ -53,6 +100,8 @@ export const members: Member[] = [
   },
   {
     id: "united",
+    country: "Belgique",
+    accountType: "Équipe",
     name: "United Sport",
     kind: "Collectives",
     role: "Collectif de football",
@@ -63,6 +112,8 @@ export const members: Member[] = [
   },
   {
     id: "marc",
+    country: "Belgique",
+    accountType: "Entraîneur",
     name: "Marc Petit",
     kind: "Professionnels",
     role: "Coach de padel",
@@ -296,10 +347,7 @@ export type SocialAction =
 function toggle(list: string[], id: string) {
   return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
 }
-export function socialReducer(
-  state: SocialState,
-  action: SocialAction,
-): SocialState {
+export function socialReducer(state: SocialState, action: SocialAction): SocialState {
   switch (action.type) {
     case "subscription":
       return { ...state, paidCategory: action.category, gate: null };
@@ -307,11 +355,7 @@ export function socialReducer(
       return { ...state, gate: action.reason };
     case "post": {
       const text = action.post.text.trim();
-      if (
-        !text ||
-        text.length > 1200 ||
-        state.posts.some((p) => p.id === action.post.id)
-      )
+      if (!text || text.length > 1200 || state.posts.some((p) => p.id === action.post.id))
         return state;
       return { ...state, posts: [{ ...action.post, text }, ...state.posts] };
     }
@@ -319,9 +363,7 @@ export function socialReducer(
       return {
         ...state,
         posts: state.posts.map((p) =>
-          p.id === action.id
-            ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) }
-            : p,
+          p.id === action.id ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) } : p,
         ),
       };
     case "comment": {
@@ -330,9 +372,7 @@ export function socialReducer(
       return {
         ...state,
         posts: state.posts.map((p) =>
-          p.id === action.id
-            ? { ...p, comments: [...p.comments, { ...action.comment, text }] }
-            : p,
+          p.id === action.id ? { ...p, comments: [...p.comments, { ...action.comment, text }] } : p,
         ),
       };
     }
@@ -347,13 +387,8 @@ export function socialReducer(
         ...state,
         activeChat: action.id,
         conversations: exists
-          ? state.conversations.map((c) =>
-              c.memberId === action.id ? { ...c, unread: false } : c,
-            )
-          : [
-              { memberId: action.id, unread: false, messages: [] },
-              ...state.conversations,
-            ],
+          ? state.conversations.map((c) => (c.memberId === action.id ? { ...c, unread: false } : c))
+          : [{ memberId: action.id, unread: false, messages: [] }, ...state.conversations],
       };
     }
     case "close-chat":
@@ -391,12 +426,7 @@ export function matchesQuery(text: string, query: string) {
   return normalize(text).includes(normalize(query.trim()));
 }
 
-export type AccessReason =
-  | "publish"
-  | "player-contact"
-  | "receive"
-  | "quota"
-  | "recipient";
+export type AccessReason = "publish" | "player-contact" | "receive" | "quota" | "recipient";
 export type AccessFeature = "publish" | "message" | "comment" | "receive";
 export type AccessContext = {
   category: Category;
@@ -413,9 +443,7 @@ export function monthKey(date = new Date()) {
     month: "2-digit",
   }).formatToParts(date);
   return (
-    parts.find((p) => p.type === "year")!.value +
-    "-" +
-    parts.find((p) => p.type === "month")!.value
+    parts.find((p) => p.type === "year")!.value + "-" + parts.find((p) => p.type === "month")!.value
   );
 }
 export function isPremium(state: SocialState, category: Category) {
@@ -434,10 +462,8 @@ export function accessReason(
   targetId?: string,
 ): AccessReason | null {
   const premium = isPremium(state, context.category);
-  if (feature === "publish")
-    return context.category === "Sportif" && !premium ? "publish" : null;
-  if (feature === "receive")
-    return canReceive(state, context.category) ? null : "receive";
+  if (feature === "publish") return context.category === "Sportif" && !premium ? "publish" : null;
+  if (feature === "receive") return canReceive(state, context.category) ? null : "receive";
   const target = members.find((m) => m.id === targetId);
   if (target && unpaidRecipients.includes(target.id)) return "recipient";
   if (target?.kind === "Joueurs" && context.category !== "Sportif" && !premium)
@@ -460,20 +486,10 @@ export function visibleMessages(
     ? conversation.messages
     : conversation.messages.filter((m) => m.mine);
 }
-export function visibleComments(
-  state: SocialState,
-  context: AccessContext,
-  post: Post,
-) {
-  return post.author === "self" && !canReceive(state, context.category)
-    ? []
-    : post.comments;
+export function visibleComments(state: SocialState, context: AccessContext, post: Post) {
+  return post.author === "self" && !canReceive(state, context.category) ? [] : post.comments;
 }
-export function commentReason(
-  state: SocialState,
-  context: AccessContext,
-  post: Post,
-) {
+export function commentReason(state: SocialState, context: AccessContext, post: Post) {
   return post.author === "self"
     ? accessReason(state, context, "receive")
     : accessReason(state, context, "comment", post.author);

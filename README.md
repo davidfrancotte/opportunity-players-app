@@ -22,7 +22,7 @@ npm start
 
 - Bienvenue et accès : `/`.
 - Fil d’actualité : `/accueil`.
-- Réseau : `/reseau`.
+- Réseau : `/reseau`, filtres contextuels joueurs (sport, genre, pays, ville, niveau, poste, côté dominant), professionnels (26 métiers) et collectifs (7 types). Inscription et édition du profil partagent ces champs. Voir `lib/directory.ts` pour le vocabulaire et `scripts/directory.test.mjs` pour les tests.
 - Conversations : `/messages`.
 - Marketplace d’opportunités : `/opportunities`.
 - Offre Gratuit / Premium et simulation d’abonnement : `/abonnement`.

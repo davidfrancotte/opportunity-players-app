@@ -1,16 +1,11 @@
 "use client";
+import { PlayerSportFields } from "./directory-fields";
+import { measurementLabel, sideNames } from "@/lib/athlete";
+import { primaryRecord } from "@/lib/directory";
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ShieldCheck,
-  Plus,
-  FileText,
-  UsersRound,
-  ArrowUpRight,
-  Star,
-  Trash2,
-} from "lucide-react";
+import { ShieldCheck, Plus, FileText, UsersRound, ArrowUpRight, Star, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { NativeSelect, NativeSelectOption } from "./ui/native-select";
 import { Textarea } from "./ui/textarea";
@@ -41,14 +36,48 @@ export function ProfileExtensions() {
   return (
     <section className="trust-profile">
       <span className="mini-kicker">VOTRE DOSSIER SPORTIF</span>
+      <p className="directory-profile-summary">
+        {[
+          profile.city,
+          profile.country,
+          profile.category === "Sportif" ? profile.gender : profile.accountType,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+      </p>
       <div className="trust-sport-pills">
         {profile.disciplines.map((s) => (
           <span key={s.sport}>
             {s.sport} · {s.level}
             {s.ranking ? ` · ${s.ranking}` : ""}
+            {profile.category === "Sportif" && s.position ? ` · ${s.position}` : ""}
+            {profile.category === "Sportif" && s.dominantSide ? ` · ${s.dominantSide}` : ""}
           </span>
         ))}
       </div>
+      {profile.category === "Sportif" && (
+        <div className="athlete-profile-facts">
+          <h3>Caractéristiques du sportif</h3>
+          <dl>
+            <div>
+              <dt>Poids</dt>
+              <dd>{measurementLabel(profile.weightKg, "kg")}</dd>
+            </div>
+            <div>
+              <dt>Taille</dt>
+              <dd>{measurementLabel(profile.heightCm, "cm")}</dd>
+            </div>
+            <div>
+              <dt>Côté dominant · {profile.sport}</dt>
+              <dd>{sideNames[primaryRecord(profile).dominantSide || ""] || "Non renseigné"}</dd>
+            </div>
+          </dl>
+          <Link href="/modifier-profil">
+            Modifier mes caractéristiques <ArrowUpRight size={16} />
+          </Link>
+          <p className="field-hint">Côté dominant précisé par sport dans votre dossier.</p>
+        </div>
+      )}
       <Link href="/disciplines">
         <span>
           <strong>Sports, niveaux & clubs</strong>
@@ -59,9 +88,7 @@ export function ProfileExtensions() {
       <Link href="/agent">
         <span>
           <strong>
-            {profile.agent.status === "none"
-              ? "Mon agent"
-              : `Agent : ${profile.agent.name}`}
+            {profile.agent.status === "none" ? "Mon agent" : `Agent : ${profile.agent.name}`}
           </strong>
           <small>
             {profile.agent.status === "confirmed"
@@ -102,9 +129,7 @@ export function ProfileExtensions() {
 
 export function DisciplinesPage() {
   const { profile, setProfile, notify } = useDemo();
-  const [records, setRecords] = useState<SportRecord[]>(
-    structuredClone(profile.disciplines),
-  );
+  const [records, setRecords] = useState<SportRecord[]>(structuredClone(profile.disciplines));
   const [sport, setSport] = useState("Tennis");
   const [error, setError] = useState("");
   function update(index: number, patch: Partial<SportRecord>) {
@@ -116,11 +141,7 @@ export function DisciplinesPage() {
       setError("Ajoutez au moins une discipline.");
       return;
     }
-    if (
-      records.some((r) =>
-        r.clubs.some((c) => !c.name.trim() || !c.period.trim()),
-      )
-    ) {
+    if (records.some((r) => r.clubs.some((c) => !c.name.trim() || !c.period.trim()))) {
       setError("Précisez le nom et la période de chaque club.");
       return;
     }
@@ -131,9 +152,7 @@ export function DisciplinesPage() {
     setProfile({
       ...profile,
       disciplines: records,
-      sport: records.some((r) => r.sport === profile.sport)
-        ? profile.sport
-        : records[0].sport,
+      sport: records.some((r) => r.sport === profile.sport) ? profile.sport : records[0].sport,
     });
     setError("");
     notify("Sports, niveaux et clubs enregistrés dans la démo.");
@@ -141,9 +160,8 @@ export function DisciplinesPage() {
   return (
     <ProfileLayout back="/profil" title="Mes disciplines">
       <p className="event-note">
-        Chaque sport garde son niveau, son classement et ses clubs. Un
-        classement déclaré n’est pas une note professionnelle ni une
-        certification fédérale.
+        Chaque sport garde son niveau, son classement et ses clubs. Un classement déclaré n’est pas
+        une note professionnelle ni une certification fédérale.
       </p>
       <form className="event-form" onSubmit={save}>
         {records.map((r, i) => (
@@ -159,18 +177,11 @@ export function DisciplinesPage() {
                 <Trash2 size={17} />
               </Button>
             </div>
-            <label>
-              Niveau
-              <NativeSelect
-                aria-label={`Niveau ${r.sport}`}
-                value={r.level}
-                onChange={(e) => update(i, { level: e.target.value })}
-              >
-                {levels.map((l) => (
-                  <NativeSelectOption key={l}>{l}</NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </label>
+            <PlayerSportFields
+              record={r}
+              prefix={`discipline-${i}`}
+              onChange={(patch) => update(i, patch)}
+            />
             <Field
               label="Classement / catégorie"
               id={`ranking-${i}`}
@@ -232,9 +243,7 @@ export function DisciplinesPage() {
                     onChange={(e) =>
                       update(i, {
                         clubs: r.clubs.map((x) =>
-                          x.id === c.id
-                            ? { ...x, current: e.target.checked }
-                            : x,
+                          x.id === c.id ? { ...x, current: e.target.checked } : x,
                         ),
                       })
                     }
@@ -244,9 +253,7 @@ export function DisciplinesPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() =>
-                    update(i, { clubs: r.clubs.filter((x) => x.id !== c.id) })
-                  }
+                  onClick={() => update(i, { clubs: r.clubs.filter((x) => x.id !== c.id) })}
                 >
                   Retirer ce club
                 </Button>
@@ -378,13 +385,10 @@ export function AgentPage() {
                 value={id}
                 onChange={(e) => {
                   setId(e.target.value);
-                  if (e.target.value)
-                    setName(members.find((m) => m.id === e.target.value)!.name);
+                  if (e.target.value) setName(members.find((m) => m.id === e.target.value)!.name);
                 }}
               >
-                <NativeSelectOption value="">
-                  Non inscrit / nom uniquement
-                </NativeSelectOption>
+                <NativeSelectOption value="">Non inscrit / nom uniquement</NativeSelectOption>
                 {members
                   .filter((m) => m.kind === "Professionnels")
                   .map((m) => (
@@ -395,9 +399,8 @@ export function AgentPage() {
               </NativeSelect>
             </label>
             <p className="event-note">
-              La relation ne sera indiquée comme confirmée qu’après validation
-              par l’autre membre. Un nom saisi librement reste « déclaré, non
-              vérifié ».
+              La relation ne sera indiquée comme confirmée qu’après validation par l’autre membre.
+              Un nom saisi librement reste « déclaré, non vérifié ».
             </p>
           </>
         )}
@@ -416,9 +419,7 @@ export function AgentPage() {
                 ? "Demande de confirmation en attente"
                 : "Relation déclarée, non vérifiée"}
           </p>
-          {profile.agent.memberId && (
-            <AgentMember id={profile.agent.memberId} />
-          )}{" "}
+          {profile.agent.memberId && <AgentMember id={profile.agent.memberId} />}{" "}
           {profile.agent.status === "pending" && (
             <details className="event-demo">
               <summary>Tester la réponse de l’agent</summary>
@@ -499,9 +500,7 @@ export function DocumentsPage() {
     setBusy(true);
     try {
       if (kind !== "Photo") {
-        const signature = new TextDecoder().decode(
-          await file.slice(0, 5).arrayBuffer(),
-        );
+        const signature = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
         if (signature !== "%PDF-") {
           setError("Ce fichier ne présente pas l’en-tête d’un PDF.");
           return;
@@ -536,9 +535,9 @@ export function DocumentsPage() {
   return (
     <ProfileLayout back="/profil" title="CV & références">
       <p className="event-note">
-        Préparez un CV ou une référence associée à un sport et à un club. Dans
-        cette démo, seul le nom et les métadonnées restent en mémoire : aucun
-        fichier n’est envoyé, stocké sur un serveur ou rendu public.
+        Préparez un CV ou une référence associée à un sport et à un club. Dans cette démo, seul le
+        nom et les métadonnées restent en mémoire : aucun fichier n’est envoyé, stocké sur un
+        serveur ou rendu public.
       </p>
       <div className="event-form">
         <label>
@@ -577,20 +576,14 @@ export function DocumentsPage() {
           <input
             type="file"
             aria-label="Choisir un fichier fictif"
-            accept={
-              kind === "Photo"
-                ? "image/jpeg,image/png,image/webp"
-                : ".pdf,application/pdf"
-            }
+            accept={kind === "Photo" ? "image/jpeg,image/png,image/webp" : ".pdf,application/pdf"}
             disabled={busy}
             onChange={(e) => {
               void add(e.target.files?.[0]);
               e.target.value = "";
             }}
           />
-          <small>
-            {kind === "Photo" ? "JPG, PNG ou WebP" : "PDF"} · 10 Mo maximum
-          </small>
+          <small>{kind === "Photo" ? "JPG, PNG ou WebP" : "PDF"} · 10 Mo maximum</small>
         </label>
         {busy && <p role="status">Vérification du format…</p>}
         {error && (
@@ -604,14 +597,13 @@ export function DocumentsPage() {
         <ShieldCheck size={22} />
         <h2>Le sport, et rien d’autre.</h2>
         <p>
-          Photos de pratique, portraits professionnels, équipes et installations
-          : le contexte sportif doit être identifiable. Une photo hors sujet ou
-          dangereuse sera refusée ; un cas incertain devra être examiné.
+          Photos de pratique, portraits professionnels, équipes et installations : le contexte
+          sportif doit être identifiable. Une photo hors sujet ou dangereuse sera refusée ; un cas
+          incertain devra être examiné.
         </p>
         <p className="event-note">
-          La démo ne reconnaît pas les images. Tout nouveau fichier reste en
-          attente et ne rejoint jamais automatiquement le profil, le fil ou la
-          galerie.
+          La démo ne reconnaît pas les images. Tout nouveau fichier reste en attente et ne rejoint
+          jamais automatiquement le profil, le fil ou la galerie.
         </p>
       </div>
       {trust.documents.map((d) => (
@@ -676,15 +668,14 @@ export function MemberDossier({ member: m }: { member: Member }) {
   return (
     <section className="trust-dossier">
       {records.map((r) => {
-        const rs = reviews.filter(
-          (x) => x.sport === r.sport && x.status === "published",
-        );
+        const rs = reviews.filter((x) => x.sport === r.sport && x.status === "published");
         return (
           <div className="trust-card" key={r.sport}>
             <h3>
               {r.sport} · {r.level}
             </h3>
             <p>{r.ranking}</p>
+            <p>{[r.position, r.dominantSide].filter(Boolean).join(" · ")}</p>
             <small>Déclaré · {r.federation || "référentiel à préciser"}</small>
             {r.clubs.map((c) => (
               <p key={c.id}>
@@ -744,9 +735,8 @@ export function MemberDossier({ member: m }: { member: Member }) {
             <details className="event-demo">
               <summary>Simuler la décision de modération</summary>
               <p>
-                Validation fictive de l’identité, de la relation au club et du
-                contenu. En production, cette action sera réservée à un
-                modérateur.
+                Validation fictive de l’identité, de la relation au club et du contenu. En
+                production, cette action sera réservée à un modérateur.
               </p>
               <Button
                 variant="outline"
@@ -769,9 +759,8 @@ export function MemberDossier({ member: m }: { member: Member }) {
           <details className="trust-card">
             <summary>Donner un avis professionnel</summary>
             <p className="event-note">
-              Comme les commentaires, l’envoi d’un avis nécessite un abonnement
-              professionnel actif. L’identité et l’expérience devront être
-              vérifiées avant publication.
+              Comme les commentaires, l’envoi d’un avis nécessite un abonnement professionnel actif.
+              L’identité et l’expérience devront être vérifiées avant publication.
             </p>
             <form className="event-form" onSubmit={submit}>
               <label>
@@ -830,8 +819,7 @@ export function MemberDossier({ member: m }: { member: Member }) {
                   checked={attest}
                   onChange={(e) => setAttest(e.target.checked)}
                 />
-                J’atteste avoir directement encadré ou côtoyé ce joueur dans
-                cette expérience.
+                J’atteste avoir directement encadré ou côtoyé ce joueur dans cette expérience.
               </label>
               <Button type="submit">Soumettre à la modération</Button>
               {submitted && !trust.error && (
@@ -844,8 +832,8 @@ export function MemberDossier({ member: m }: { member: Member }) {
           </details>
         ) : (
           <p className="event-note">
-            Seuls les comptes professionnels peuvent soumettre une évaluation
-            d’expérience. Les notes sont séparées par sport.
+            Seuls les comptes professionnels peuvent soumettre une évaluation d’expérience. Les
+            notes sont séparées par sport.
           </p>
         ))}
     </section>
@@ -938,21 +926,19 @@ export function SafetyPage() {
         <ShieldCheck size={26} />
         <h2>Un terrain respectueux.</h2>
         <p>
-          Racisme, sexisme, menaces et harcèlement n’ont pas leur place ici.
-          Signalez un membre depuis une conversation ou son profil, et
-          bloquez-le sans attendre une décision.
+          Racisme, sexisme, menaces et harcèlement n’ont pas leur place ici. Signalez un membre
+          depuis une conversation ou son profil, et bloquez-le sans attendre une décision.
         </p>
         <p className="event-note">
-          Le filtre local reconnaît quelques expressions de test. Il n’est ni
-          exhaustif, ni une IA de modération. Une absence d’alerte ne prouve pas
-          qu’un contenu est acceptable.
+          Le filtre local reconnaît quelques expressions de test. Il n’est ni exhaustif, ni une IA
+          de modération. Une absence d’alerte ne prouve pas qu’un contenu est acceptable.
         </p>
       </div>
       <details className="trust-card">
         <summary>Tester le filtre de démonstration</summary>
         <p className="event-note">
-          Utilisez [TEST RACISME], [TEST SEXISME], [TEST MENACE] ou [TEST
-          HARCELEMENT], sans écrire de véritable injure.
+          Utilisez [TEST RACISME], [TEST SEXISME], [TEST MENACE] ou [TEST HARCELEMENT], sans écrire
+          de véritable injure.
         </p>
         <Textarea
           aria-label="Texte à tester"
@@ -981,8 +967,8 @@ export function SafetyPage() {
       <div className="trust-card">
         <h2>Demander une révision</h2>
         <p>
-          Un blocage automatique peut se tromper. Une équipe humaine devra
-          examiner les contestations.
+          Un blocage automatique peut se tromper. Une équipe humaine devra examiner les
+          contestations.
         </p>
         <Button
           variant="outline"
@@ -1009,8 +995,8 @@ export function SafetyPage() {
             <p key={r.id}>
               <strong>{r.reason}</strong>
               <small>
-                {members.find((m) => m.id === r.memberId)?.name || "Modération"}{" "}
-                · reçu dans la simulation, non traité
+                {members.find((m) => m.id === r.memberId)?.name || "Modération"} · reçu dans la
+                simulation, non traité
               </small>
             </p>
           ))
@@ -1024,10 +1010,7 @@ export function SafetyPage() {
           trust.blocked.map((id) => (
             <div key={id}>
               <p>{members.find((m) => m.id === id)?.name}</p>
-              <Button
-                variant="outline"
-                onClick={() => dispatchTrust({ type: "block", id })}
-              >
+              <Button variant="outline" onClick={() => dispatchTrust({ type: "block", id })}>
                 Débloquer
               </Button>
             </div>
@@ -1046,8 +1029,7 @@ export function SafetyPage() {
           .
         </p>
         <p className="event-note">
-          Aucune protection d’accès réelle n’est active. Ne saisissez jamais vos
-          codes personnels.
+          Aucune protection d’accès réelle n’est active. Ne saisissez jamais vos codes personnels.
         </p>
       </section>
       <Link className="action secondary" href="/confidentialite">
@@ -1068,12 +1050,12 @@ export function ReferralPage() {
         <strong>3 mois</strong>
         <h2>Premium pour une rencontre de plus.</h2>
         <p>
-          Proposition de parrainage : un nouveau membre distinct, e-mail
-          vérifié, profil complété et première connexion = trois mois offerts.
+          Proposition de parrainage : un nouveau membre distinct, e-mail vérifié, profil complété et
+          première connexion = trois mois offerts.
         </p>
         <small>
-          Simulation uniquement. Règles antifraude et conditions commerciales à
-          valider avant lancement.
+          Simulation uniquement. Règles antifraude et conditions commerciales à valider avant
+          lancement.
         </small>
       </section>
       <div className="trust-card">
@@ -1088,17 +1070,15 @@ export function ReferralPage() {
               );
               setCopied(true);
             } catch {
-              notify(
-                "Copie indisponible. Code de démonstration : ARENA-ALEX-DEMO",
-              );
+              notify("Copie indisponible. Code de démonstration : ARENA-ALEX-DEMO");
             }
           }}
         >
           {copied ? "Lien copié" : "Copier le lien de démonstration"}
         </Button>
         <p className="event-note">
-          Ce lien illustre l’attribution du parrain ; il ne suit aucune
-          inscription réelle et n’envoie aucune invitation.
+          Ce lien illustre l’attribution du parrain ; il ne suit aucune inscription réelle et
+          n’envoie aucune invitation.
         </p>
       </div>
       <form
@@ -1133,16 +1113,13 @@ export function ReferralPage() {
         <section className="trust-card" key={r.id}>
           <h3>{r.email}</h3>
           <ol className="referral-steps">
-            {[
-              "Invitation",
-              "E-mail vérifié",
-              "Profil complété",
-              "Première connexion",
-            ].map((s, i) => (
-              <li key={s} data-complete={r.stage >= i}>
-                {s}
-              </li>
-            ))}
+            {["Invitation", "E-mail vérifié", "Profil complété", "Première connexion"].map(
+              (s, i) => (
+                <li key={s} data-complete={r.stage >= i}>
+                  {s}
+                </li>
+              ),
+            )}
           </ol>
           {r.credited ? (
             <p className="event-success">3 mois crédités · simulation</p>
@@ -1151,14 +1128,7 @@ export function ReferralPage() {
               variant="outline"
               onClick={() => dispatchTrust({ type: "referral-step", id: r.id })}
             >
-              Simuler :{" "}
-              {
-                [
-                  "vérification e-mail",
-                  "profil complété",
-                  "première connexion",
-                ][r.stage]
-              }
+              Simuler : {["vérification e-mail", "profil complété", "première connexion"][r.stage]}
             </Button>
           )}
         </section>
@@ -1166,8 +1136,8 @@ export function ReferralPage() {
       <section className="trust-card">
         <h2>{trust.rewardMonths} mois gagnés · démo</h2>
         <p>
-          Un filleul n’est crédité qu’une seule fois. Les doublons et
-          l’auto-parrainage sont refusés dans cette simulation.
+          Un filleul n’est crédité qu’une seule fois. Les doublons et l’auto-parrainage sont refusés
+          dans cette simulation.
         </p>
         <Button
           disabled={trust.rewardMonths < 3 || trust.rewardActivated}
@@ -1199,51 +1169,44 @@ export function PoliciesPage() {
       <section className="trust-card">
         <h2>Vos données dans cette démo</h2>
         <p>
-          Les formulaires, signalements, documents et évaluations utilisent
-          uniquement la mémoire de cet onglet. Aucun document sélectionné n’est
-          envoyé à un serveur. Tout est effacé au rechargement. Utilisez des
-          informations et fichiers fictifs.
+          Les formulaires, signalements, documents et évaluations utilisent uniquement la mémoire de
+          cet onglet. Aucun document sélectionné n’est envoyé à un serveur. Tout est effacé au
+          rechargement. Utilisez des informations et fichiers fictifs.
         </p>
         <p>
-          Les contenus publiés dans une future version seront visibles selon vos
-          réglages de partage. Les signalements devront être limités aux équipes
-          autorisées, sans communication automatique de l’identité du signalant
-          au membre signalé.
+          Les contenus publiés dans une future version seront visibles selon vos réglages de
+          partage. Les signalements devront être limités aux équipes autorisées, sans communication
+          automatique de l’identité du signalant au membre signalé.
         </p>
       </section>
       <section className="trust-card">
         <h2>Des informations sincères</h2>
         <p>
-          Déclarez vos sports, niveaux, clubs, expériences et liens avec un
-          agent avec exactitude. Ne revendiquez pas une affiliation sans
-          autorisation. Un classement déclaré ou un document transmis n’est pas
-          automatiquement vérifié.
+          Déclarez vos sports, niveaux, clubs, expériences et liens avec un agent avec exactitude.
+          Ne revendiquez pas une affiliation sans autorisation. Un classement déclaré ou un document
+          transmis n’est pas automatiquement vérifié.
         </p>
         <p>
-          Les professionnels doivent avoir directement connu l’expérience
-          évaluée et rédiger un avis factuel, respectueux, sans données
-          sensibles. Les intéressés doivent pouvoir signaler un avis et demander
-          une révision.
+          Les professionnels doivent avoir directement connu l’expérience évaluée et rédiger un avis
+          factuel, respectueux, sans données sensibles. Les intéressés doivent pouvoir signaler un
+          avis et demander une révision.
         </p>
       </section>
       <section className="trust-card">
         <h2>Une communauté sportive</h2>
         <p>
-          Les propos racistes, sexistes, discriminatoires, menaçants et le
-          harcèlement sont interdits. Les photos doivent être liées au sport et
-          ne pas porter atteinte aux personnes. Une modération humaine doit
-          pouvoir réexaminer les décisions automatiques.
+          Les propos racistes, sexistes, discriminatoires, menaçants et le harcèlement sont
+          interdits. Les photos doivent être liées au sport et ne pas porter atteinte aux personnes.
+          Une modération humaine doit pouvoir réexaminer les décisions automatiques.
         </p>
       </section>
       <section className="trust-card">
         <h2>Avant le lancement réel</h2>
         <p>
-          Cette notice n’est pas la politique juridique définitive. Le
-          responsable du traitement, ses coordonnées, les finalités et bases
-          légales, prestataires, transferts éventuels, durées de conservation,
-          droits et modalités de recours devront être renseignés et validés
-          avant toute collecte réelle. Aucun consentement marketing n’est
-          demandé ni précoché ici.
+          Cette notice n’est pas la politique juridique définitive. Le responsable du traitement,
+          ses coordonnées, les finalités et bases légales, prestataires, transferts éventuels,
+          durées de conservation, droits et modalités de recours devront être renseignés et validés
+          avant toute collecte réelle. Aucun consentement marketing n’est demandé ni précoché ici.
         </p>
         <a
           href="https://www.cnil.fr/fr/conformite-rgpd-information-des-personnes-et-transparence"
@@ -1274,8 +1237,8 @@ export function SecondFactorPage() {
       <div className="demo-code-note">
         <strong>CODE DE DÉMONSTRATION : 135790</strong>
         <p>
-          Aucun authentificateur, QR code ou secret réel n’est configuré. Ne
-          saisissez jamais votre propre code.
+          Aucun authentificateur, QR code ou secret réel n’est configuré. Ne saisissez jamais votre
+          propre code.
         </p>
       </div>
       <form

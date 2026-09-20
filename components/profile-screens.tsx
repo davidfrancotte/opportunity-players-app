@@ -29,19 +29,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useDemo } from "./demo-provider";
 import { PlanStatus } from "./subscription-ui";
 import { ProfileExtensions } from "./trust-screens";
+import { ProfileDirectoryFields } from "./directory-fields";
+import { normalizeMeasurement } from "@/lib/athlete";
 import { moderateText } from "@/lib/trust";
 import { EventHeader } from "./event-navigation";
 import { Brand, Field, Submit, FormErrors, focusError } from "./studio-ui";
@@ -119,19 +113,11 @@ export function ProfileLayout({
         <div className="header-right">
           <EventHeader />
           {back ? (
-            <Link
-              href={back}
-              className="icon-link"
-              aria-label="Retour au profil"
-            >
+            <Link href={back} className="icon-link" aria-label="Retour au profil">
               <ArrowLeft size={21} />
             </Link>
           ) : (
-            <Link
-              href="/parametres"
-              className="icon-link"
-              aria-label="Réglages de la démo"
-            >
+            <Link href="/parametres" className="icon-link" aria-label="Réglages de la démo">
               <Settings size={21} />
             </Link>
           )}
@@ -147,8 +133,8 @@ export function ProfileLayout({
       <footer className="profile-footer">
         <span>CONTENUS FICTIFS · DÉMO INTERACTIVE</span>
         <p>
-          Les modifications restent dans cette visite et sont effacées au
-          rechargement. Rien n’est publié.
+          Les modifications restent dans cette visite et sont effacées au rechargement. Rien n’est
+          publié.
         </p>
       </footer>
       <BottomNav />
@@ -181,9 +167,7 @@ export function Modal({
           <X size={20} />
         </Button>
         <DialogTitle className="modal-title">{title}</DialogTitle>
-        <DialogDescription className="modal-description">
-          {description}
-        </DialogDescription>
+        <DialogDescription className="modal-description">{description}</DialogDescription>
         {children}
       </DialogContent>
     </Dialog>
@@ -210,11 +194,7 @@ function EmptyCard({
   );
 }
 
-export function ProfilePage({
-  section = "about",
-}: {
-  section?: "about" | "career" | "media";
-}) {
+export function ProfilePage({ section = "about" }: { section?: "about" | "career" | "media" }) {
   const { profile, setProfile, notify } = useDemo();
   const progress = completion(profile);
   const router = useRouter();
@@ -251,15 +231,11 @@ export function ProfilePage({
       description: String(data.get("description") || "").trim(),
     };
     if (moderateText(JSON.stringify(record))) {
-      notify(
-        "Contenu bloqué par le filtre de démonstration. Reformulez cette expérience.",
-      );
+      notify("Contenu bloqué par le filtre de démonstration. Reformulez cette expérience.");
       return;
     }
     if (!record.title || !record.organisation || !record.period) {
-      notify(
-        "Complétez le rôle, l’organisation et la période avant d’enregistrer.",
-      );
+      notify("Complétez le rôle, l’organisation et la période avant d’enregistrer.");
       return;
     }
     setProfile({
@@ -277,11 +253,7 @@ export function ProfilePage({
         <div>
           <p className="eyebrow">LE SPORT VOUS RASSEMBLE</p>
           <h1>
-            {tab === "career"
-              ? "Mon parcours"
-              : tab === "media"
-                ? "Mes médias"
-                : "Mon profil"}
+            {tab === "career" ? "Mon parcours" : tab === "media" ? "Mes médias" : "Mon profil"}
             <span className="lime">.</span>
           </h1>
         </div>
@@ -292,32 +264,20 @@ export function ProfilePage({
       </div>
       {tab === "about" && <PlanStatus />}
       {tab !== "about" && (
-        <Link
-          className="action secondary"
-          href={tab === "media" ? "/documents" : "/disciplines"}
-        >
+        <Link className="action secondary" href={tab === "media" ? "/documents" : "/disciplines"}>
           {tab === "media"
             ? "Ajouter un document ou une photo"
             : "Gérer mes sports, niveaux et clubs"}
         </Link>
       )}
       <nav className="profile-subnav" aria-label="Rubriques de mon profil">
-        <Link
-          href="/profil"
-          aria-current={tab === "about" ? "page" : undefined}
-        >
+        <Link href="/profil" aria-current={tab === "about" ? "page" : undefined}>
           À propos
         </Link>
-        <Link
-          href="/parcours"
-          aria-current={tab === "career" ? "page" : undefined}
-        >
+        <Link href="/parcours" aria-current={tab === "career" ? "page" : undefined}>
           Parcours
         </Link>
-        <Link
-          href="/medias"
-          aria-current={tab === "media" ? "page" : undefined}
-        >
+        <Link href="/medias" aria-current={tab === "media" ? "page" : undefined}>
           Médias
         </Link>
       </nav>
@@ -376,10 +336,7 @@ export function ProfilePage({
         <section className="profile-content">
           {tab === "about" && <ProfileExtensions />}
           {tab === "about" && (
-            <Button
-              className="completion-card"
-              onClick={() => setProgressOpen(true)}
-            >
+            <Button className="completion-card" onClick={() => setProgressOpen(true)}>
               <UserRound size={26} />
               <span>
                 <strong>
@@ -405,10 +362,7 @@ export function ProfilePage({
                     <h3>
                       <UserRound size={16} /> Ma présentation
                     </h3>
-                    <Link
-                      href="/modifier-profil"
-                      aria-label="Modifier ma présentation"
-                    >
+                    <Link href="/modifier-profil" aria-label="Modifier ma présentation">
                       <Pencil size={15} />
                     </Link>
                   </div>
@@ -420,9 +374,7 @@ export function ProfilePage({
                     {profile.skills.length ? (
                       profile.skills.map((s) => <span key={s}>{s}</span>)
                     ) : (
-                      <Link href="/modifier-profil">
-                        + Ajouter mes compétences
-                      </Link>
+                      <Link href="/modifier-profil">+ Ajouter mes compétences</Link>
                     )}
                   </div>
                 </article>
@@ -452,10 +404,7 @@ export function ProfilePage({
                 </button>
                 <div className="card-heading section-heading">
                   <h3>Mes médias</h3>
-                  <Button
-                    variant="ghost"
-                    onClick={() => router.push("/medias")}
-                  >
+                  <Button variant="ghost" onClick={() => router.push("/medias")}>
                     Voir tout <ArrowRight size={14} />
                   </Button>
                 </div>
@@ -469,20 +418,14 @@ export function ProfilePage({
                       >
                         <img
                           src={src}
-                          alt={
-                            photos.find((p) => p.src === src)?.label ||
-                            "Image sportive fictive"
-                          }
+                          alt={photos.find((p) => p.src === src)?.label || "Image sportive fictive"}
                         />
                         <ArrowUpRight size={17} />
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <button
-                    className="add-media-inline"
-                    onClick={() => setMediaOpen(true)}
-                  >
+                  <button className="add-media-inline" onClick={() => setMediaOpen(true)}>
                     <Plus size={18} /> Ajouter mes premiers visuels
                   </button>
                 )}
@@ -502,9 +445,7 @@ export function ProfilePage({
                       <article key={exp.id} className="experience-card">
                         <span className="timeline-dot" />
                         <div className="card-heading">
-                          <span className="experience-period">
-                            {exp.period}
-                          </span>
+                          <span className="experience-period">{exp.period}</span>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -539,9 +480,7 @@ export function ProfilePage({
                   <FileText size={26} />
                   <span>
                     <strong>Exporter mon CV fictif</strong>
-                    <small>
-                      Les informations de ce profil, au format texte.
-                    </small>
+                    <small>Les informations de ce profil, au format texte.</small>
                   </span>
                   <Download size={18} />
                 </button>
@@ -564,10 +503,7 @@ export function ProfilePage({
                       <button key={src} onClick={() => setSelectedMedia(src)}>
                         <img
                           src={src}
-                          alt={
-                            photos.find((p) => p.src === src)?.label ||
-                            "Illustration sportive"
-                          }
+                          alt={photos.find((p) => p.src === src)?.label || "Illustration sportive"}
                         />
                         <span>
                           {photos.find((p) => p.src === src)?.label}
@@ -582,10 +518,7 @@ export function ProfilePage({
                     title="Un autre regard sur votre sport."
                     text="Choisissez des visuels de démonstration pour personnaliser votre galerie."
                     action={
-                      <Button
-                        onClick={() => setMediaOpen(true)}
-                        className="small-primary"
-                      >
+                      <Button onClick={() => setMediaOpen(true)} className="small-primary">
                         Choisir une image
                       </Button>
                     }
@@ -650,20 +583,14 @@ export function ProfilePage({
       <Modal
         open={!!selectedMedia}
         onOpenChange={() => setSelectedMedia(null)}
-        title={
-          photos.find((p) => p.src === selectedMedia)?.label ||
-          "Illustration sportive"
-        }
+        title={photos.find((p) => p.src === selectedMedia)?.label || "Illustration sportive"}
         description="Image générée · personne fictive · galerie de démonstration."
       >
         {selectedMedia && (
           <img
             className="lightbox-image"
             src={selectedMedia}
-            alt={
-              photos.find((p) => p.src === selectedMedia)?.label ||
-              "Illustration sportive"
-            }
+            alt={photos.find((p) => p.src === selectedMedia)?.label || "Illustration sportive"}
           />
         )}
         <Button
@@ -730,9 +657,7 @@ export function ProfilePage({
               onClick={() => {
                 setProfile({
                   ...profile,
-                  experiences: profile.experiences.filter(
-                    (x) => x.id !== experience.id,
-                  ),
+                  experiences: profile.experiences.filter((x) => x.id !== experience.id),
                 });
                 setExperienceOpen(false);
                 notify("Étape retirée du parcours de démonstration.");
@@ -782,7 +707,7 @@ export function EditProfile() {
   const [skills, setSkills] = useState(profile.skills.join(", "));
   const [errors, setErrors] = useState<Issues>({});
   function update(key: keyof Profile, value: string) {
-    setDraft({ ...draft, [key]: value });
+    setDraft({ ...draft, [key]: value, ...(key === "category" ? { accountType: "" } : {}) });
   }
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -804,6 +729,11 @@ export function EditProfile() {
       lastName: draft.lastName.trim(),
       headline: draft.headline.trim(),
       city: draft.city.trim(),
+      country: draft.country.trim(),
+      weightKg: draft.category === "Sportif" ? normalizeMeasurement(draft.weightKg) : "",
+      heightCm: draft.category === "Sportif" ? normalizeMeasurement(draft.heightCm) : "",
+      accountType: draft.category === "Sportif" ? "" : draft.accountType,
+      gender: draft.category === "Sportif" ? draft.gender : "",
       organisation: draft.organisation.trim(),
       bio: draft.bio.trim(),
       objective: draft.objective.trim(),
@@ -818,15 +748,12 @@ export function EditProfile() {
     };
     const issues = validateProfile(next);
     if (moderateText(JSON.stringify(next)))
-      issues.bio =
-        "Contenu bloqué par le filtre de démonstration. Reformulez les informations.";
+      issues.bio = "Contenu bloqué par le filtre de démonstration. Reformulez les informations.";
     setErrors(issues);
     focusError(issues);
     if (Object.keys(issues).length) return;
     setProfile(next);
-    notify(
-      "Modifications enregistrées pour cette visite. Rien n’a été publié.",
-    );
+    notify("Modifications enregistrées pour cette visite. Rien n’a été publié.");
     router.push("/profil");
   }
   return (
@@ -836,9 +763,7 @@ export function EditProfile() {
           <Pencil size={21} />
           <p>
             Les bonnes rencontres commencent par un profil qui vous ressemble.
-            <small>
-              Utilisez des informations fictives pour cette démonstration.
-            </small>
+            <small>Utilisez des informations fictives pour cette démonstration.</small>
           </p>
         </div>
         <FormErrors errors={errors} />
@@ -941,6 +866,7 @@ export function EditProfile() {
               error={errors.city}
             />
           </div>
+          <ProfileDirectoryFields profile={draft} onChange={setDraft} errors={errors} />
           <Field
             label="Compétences"
             name="skills"
@@ -1006,14 +932,12 @@ export function SettingsPage() {
             </h2>
           </div>
           <p>
-            Aucun compte réel, aucune authentification et aucun message envoyé.
-            Le code e-mail et les identifiants proposés servent uniquement à
-            essayer l’interface.
+            Aucun compte réel, aucune authentification et aucun message envoyé. Le code e-mail et
+            les identifiants proposés servent uniquement à essayer l’interface.
           </p>
           <p>
-            Vos modifications restent en mémoire dans cet onglet et
-            disparaissent au rechargement. Aucun mot de passe saisi n’est
-            conservé.
+            Vos modifications restent en mémoire dans cet onglet et disparaissent au rechargement.
+            Aucun mot de passe saisi n’est conservé.
           </p>
         </section>
         <section className="info-card">
@@ -1022,18 +946,11 @@ export function SettingsPage() {
               <UserRound size={19} /> Reprendre le parcours.
             </h2>
           </div>
-          <p>
-            Explorez la création d’un nouveau profil ou revenez au profil fictif
-            d’Alex.
-          </p>
+          <p>Explorez la création d’un nouveau profil ou revenez au profil fictif d’Alex.</p>
           <Link href="/inscription" className="text-link">
             Essayer l’inscription <ArrowRight size={15} />
           </Link>
-          <Button
-            variant="ghost"
-            className="settings-action"
-            onClick={() => setConfirm(true)}
-          >
+          <Button variant="ghost" className="settings-action" onClick={() => setConfirm(true)}>
             <RotateCcw size={17} /> Réinitialiser la démonstration
           </Button>
           <Button
@@ -1042,9 +959,7 @@ export function SettingsPage() {
             onClick={() => {
               setDraft(null);
               setEmailVerified(false);
-              notify(
-                "Retour à l’accueil. La démo ne gère pas de session authentifiée.",
-              );
+              notify("Retour à l’accueil. La démo ne gère pas de session authentifiée.");
               router.push("/");
             }}
           >

@@ -59,7 +59,7 @@ test("nouveau profil : aucune expérience ni compétence fabriquée", () => {
 });
 test("profil : champs requis et parcours organisation", () => {
   assert.deepEqual(validateProfile(initialProfile), {});
-  const p = { ...initialProfile, category: "Organisation", organisation: "" };
+  const p = { ...initialProfile, category: "Organisation", accountType: "Club", organisation: "" };
   assert.ok(validateProfile(p).organisation);
   p.organisation = "Club fictif";
   assert.equal(displayName(p), "Club fictif");
