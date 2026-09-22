@@ -2,8 +2,28 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { careerActors,createCareerState,careerReducer,availableSlots,recommendations,appointmentPurposes } from '../lib/career.ts';
 import { initialProfile } from '../lib/model.ts';
+import { unconfirmedAppointments } from '../lib/career.ts';
 const actors=careerActors(initialProfile,false), now=Date.parse('2026-09-20T10:00:00Z');
 const run=(s,id,action,blocked=[])=>careerReducer(s,{action,context:{actor:actors.find(a=>a.id===id),actors,blocked,now}});
+test('agenda requests: participant-scoped count, accept, decline, booking and cancellation', () => {
+ let s=run(createCareerState(),'self',{type:'request',id:'first',professional:'marc',purpose:appointmentPurposes[0]});
+ assert.equal(unconfirmedAppointments(s,'self').length,1);
+ assert.equal(unconfirmedAppointments(s,'marc').length,1);
+ assert.equal(unconfirmedAppointments(s,'lea').length,0);
+ assert.equal(run(s,'self',{type:'respond',id:'first',accept:true}).error,'forbidden');
+ s=run(s,'marc',{type:'respond',id:'first',accept:true});
+ assert.equal(unconfirmedAppointments(s,'self').length,1);
+ s=run(s,'marc',{type:'slot',slot:{id:'new-slot',professional:'marc',start:'2026-10-01T10:00:00Z',place:'Visio'}});
+ s=run(s,'self',{type:'book',id:'first',slot:'new-slot'});
+ assert.equal(unconfirmedAppointments(s,'self').length,0);
+ assert.equal(unconfirmedAppointments(s,'marc').length,0);
+ s=run(s,'lea',{type:'request',id:'second',professional:'marc',purpose:appointmentPurposes[0]});
+ s=run(s,'marc',{type:'respond',id:'second',accept:false});
+ assert.equal(unconfirmedAppointments(s,'marc').length,0);
+ s=run(s,'lea',{type:'request',id:'third',professional:'marc',purpose:appointmentPurposes[0]});
+ s=run(s,'lea',{type:'cancel',id:'third'});
+ assert.equal(unconfirmedAppointments(s,'lea').length,0);
+});
 test('recommendations explain sport/location matches, exclude blocked people and wrong audiences',()=>{
  const s=createCareerState();let r=recommendations(s,actors[0],['marc']);
  assert.ok(!r.people.some(x=>x.member.id==='marc'));assert.ok(r.offers.every(x=>x.offer.audience==='Professionnel'));assert.ok(r.people.every(x=>x.reasons.length));

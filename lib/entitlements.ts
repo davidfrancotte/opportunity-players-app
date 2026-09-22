@@ -18,7 +18,7 @@ export function limits(category: Category, premium: boolean) {
     appointmentsReceived: premium ? 100 : 3,
     offers: player ? 0 : premium ? (pro ? 5 : 10) : pro ? 0 : 1,
     events: premium ? (player ? 10 : pro ? 25 : 50) : 1,
-    discover: premium || !player,
+    discover: premium,
     lists: player ? 0 : premium ? (pro ? 20 : 30) : 1,
     talents: player ? 0 : premium ? 1000 : 20,
     managers: category === "Organisation" && premium ? 5 : 1,

@@ -1,6 +1,7 @@
 import type { Category } from "./model";
 import { moderateText } from "./trust.ts";
 import { limits } from './entitlements.ts';
+import { validClassification, type PostClassification } from './community.ts';
 export type Member = {
   birthDate?: string;
   id: string;
@@ -128,7 +129,7 @@ export const members: Member[] = [
     bio: "Des séances construites autour du plaisir et de la progression, pour débutants et compétiteurs.",
   },
 ];
-export type Post = {
+export type Post = PostClassification & {
   id: string;
   author: string;
   name: string;
@@ -137,6 +138,7 @@ export type Post = {
   sport: string;
   text: string;
   image?: string;
+  video?: string;
   likes: number;
   liked: boolean;
   comments: { id: string; name: string; text: string }[];
@@ -148,6 +150,7 @@ export type Conversation = {
   messages: ChatMessage[];
 };
 export type Opportunity = {
+  groupTrial?: boolean;
   id: string;
   title: string;
   owner: string;
@@ -159,6 +162,9 @@ export type Opportunity = {
   description: string;
   details: string[];
 };
+export function matchesOpportunityType(opportunity: Opportunity, type: string) {
+  return type === "Toutes" || opportunity.type === type || (type === "Essais groupés" && opportunity.groupTrial === true);
+}
 export const opportunities: Opportunity[] = [
   {
     id: "coach",
@@ -196,12 +202,13 @@ export const opportunities: Opportunity[] = [
   },
   {
     id: "tryout",
+    groupTrial: true,
     title: "De nouveaux talents sur le parquet.",
     owner: "Collectif Arena",
     sport: "Basketball",
     type: "Recrutement",
     city: "Liège",
-    format: "Détection · Amateur",
+    format: "Essai groupé · Amateur",
     image: "/images/basketball-color.webp",
     description:
       "Un exemple de détection pour compléter un collectif amateur. Venez avec votre énergie et votre envie de jouer en équipe.",
@@ -236,6 +243,7 @@ export type SocialState = {
   gate: AccessReason | null;
   posts: Post[];
   following: string[];
+  connectionInvitations: { memberId: string; direction?: 'incoming' | 'outgoing'; status: 'pending' | 'accepted' | 'declined' }[];
   conversations: Conversation[];
   activeChat: string | null;
   saved: string[];
@@ -247,12 +255,14 @@ export function createSocialState(): SocialState {
     sentByMonth: {},
     gate: null,
     following: ["horizon"],
+    connectionInvitations: ['lea', 'noah', 'sam'].map(memberId => ({ memberId, status: 'pending' })),
     saved: [],
     interested: [],
     activeChat: null,
     posts: [
       {
         id: "post-padel",
+        category: 'News',
         author: "horizon",
         name: "Horizon Padel",
         role: "Club & communauté · Namur",
@@ -266,6 +276,8 @@ export function createSocialState(): SocialState {
       },
       {
         id: "post-tennis",
+        category: 'Opportunités',
+        opportunityCategory: 'Partenaires de jeu',
         author: "lea",
         name: "Léa Moreau",
         role: "Joueuse de tennis · Bruxelles",
@@ -279,6 +291,7 @@ export function createSocialState(): SocialState {
       },
       {
         id: "post-running",
+        category: 'Divers',
         author: "sam",
         name: "Sam Delcourt",
         role: "Préparateur physique · Louvain",
@@ -291,6 +304,7 @@ export function createSocialState(): SocialState {
       },
       {
         id: "post-basket",
+        category: 'News',
         author: "noah",
         name: "Noah Laurent",
         role: "Ailier · Liège",
@@ -301,6 +315,14 @@ export function createSocialState(): SocialState {
         likes: 31,
         liked: false,
         comments: [],
+      },
+      {
+        id: 'post-coach-job', category: 'Offres d’emploi', author: 'academie', name: 'Académie du Nord', role: 'Académie · Lille', avatar: '/images/football-color.webp', sport: 'Football',
+        text: 'Offre fictive : notre académie recherche un entraîneur de gardiens pour accompagner ses équipes jeunes. Mission à Lille, modalités à discuter avec le club.', likes: 0, liked: false, comments: [],
+      },
+      {
+        id: 'post-striker', category: 'Opportunités', opportunityCategory: 'Recrutement de joueurs', author: 'united', name: 'United Sport', role: 'Collectif · Charleroi', avatar: '/images/football-color.webp', sport: 'Football',
+        text: 'Opportunité fictive : notre club recherche un nouvel attaquant pour la saison. Prenez contact pour présenter votre parcours et organiser un essai.', likes: 0, liked: false, comments: [],
       },
     ],
     conversations: [
@@ -335,6 +357,8 @@ export function createSocialState(): SocialState {
   };
 }
 export type SocialAction =
+  | { type: 'connection-request' | 'connection-cancel'; id: string }
+  | { type: 'connection-demo-response'; id: string; accept: boolean }
   | { type: "subscription"; category: Category | null }
   | { type: "gate"; reason: AccessReason | null }
   | { type: "post"; post: Post }
@@ -345,6 +369,7 @@ export type SocialAction =
       comment: { id: string; name: string; text: string };
     }
   | { type: "follow"; id: string }
+  | { type: 'connection-response'; id: string; accept: boolean }
   | { type: "open-chat"; id: string }
   | { type: "close-chat" }
   | { type: "message"; id: string; message: ChatMessage }
@@ -361,7 +386,7 @@ export function socialReducer(state: SocialState, action: SocialAction): SocialS
       return { ...state, gate: action.reason };
     case "post": {
       const text = action.post.text.trim();
-      if (!text || text.length > 1200 || state.posts.some((p) => p.id === action.post.id))
+      if (!text || text.length > 1200 || !validClassification(action.post) || state.posts.some((p) => p.id === action.post.id))
         return state;
       return { ...state, posts: [{ ...action.post, text }, ...state.posts] };
     }
@@ -381,6 +406,19 @@ export function socialReducer(state: SocialState, action: SocialAction): SocialS
           p.id === action.id ? { ...p, comments: [...p.comments, { ...action.comment, text }] } : p,
         ),
       };
+    }
+    case 'connection-request': {
+      if (!members.some(m => m.id === action.id) || state.connectionInvitations.some(i => i.memberId === action.id && i.status !== 'declined')) return state;
+      return { ...state, connectionInvitations: [...state.connectionInvitations.filter(i => i.memberId !== action.id), { memberId: action.id, direction: 'outgoing', status: 'pending' }] };
+    }
+    case 'connection-cancel': {
+      return { ...state, connectionInvitations: state.connectionInvitations.filter(i => !(i.memberId === action.id && i.direction === 'outgoing' && i.status === 'pending')) };
+    }
+    case 'connection-demo-response':
+    case 'connection-response': {
+      const outgoing = action.type === 'connection-demo-response';
+      if (!state.connectionInvitations.some(i => i.memberId === action.id && i.status === 'pending' && (i.direction === 'outgoing') === outgoing)) return state;
+      return { ...state, connectionInvitations: state.connectionInvitations.map(i => i.memberId === action.id ? { ...i, status: action.accept ? 'accepted' : 'declined' } : i), following: action.accept ? [...new Set([...state.following, action.id])] : state.following };
     }
     case "follow":
       return members.some((m) => m.id === action.id)
@@ -455,6 +493,15 @@ export function monthKey(date = new Date()) {
 export function isPremium(state: SocialState, category: Category) {
   return state.paidCategory === category;
 }
+export function isConnected(state: SocialState, memberId?: string) {
+  return state.connectionInvitations.some(i => i.memberId === memberId && i.status === 'accepted');
+}
+export function connectedMemberIds(state: SocialState, blocked: string[] = []) {
+  return state.connectionInvitations.filter(i => i.status === 'accepted' && !blocked.includes(i.memberId)).map(i => i.memberId);
+}
+export function inCommunityFeed(state: SocialState, author: string) {
+  return author === 'self' || state.following.includes(author);
+}
 export function canReceive(state: SocialState, category: Category) {
   return true;
 }
@@ -473,6 +520,7 @@ export function accessReason(
   const established=state.conversations.some(c=>c.memberId===targetId&&c.messages.length>0);
   if (
     feature === "message" &&
+    !isConnected(state, targetId) &&
     !established &&
     !remainingMessages(state, context.month,context.category)
   )
@@ -513,7 +561,7 @@ export function guardedSocialReducer(
           : "";
   if (moderateText(text)) return state;
   if (
-    (action.type === "message" || action.type === "open-chat") &&
+    (action.type === "message" || action.type === "open-chat" || action.type === "follow" || action.type === "connection-request" || action.type === "connection-response" || action.type === "connection-demo-response") &&
     context.blocked?.includes(action.id)
   )
     return state;
@@ -541,6 +589,7 @@ export function guardedSocialReducer(
   if (
     action.type === "message" &&
     action.message.mine &&
+    !isConnected(state, action.id) &&
     !state.conversations.some(c=>c.memberId===action.id&&c.messages.length>0)
   ) {
     return {

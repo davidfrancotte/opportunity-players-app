@@ -1,5 +1,6 @@
 "use client";
-import {ExtensionPage} from './extension-screens';
+import { ExtensionPage } from "./extension-screens";
+import { AgendaPage } from "./agenda-screen";
 import { ApplicationsPage, RecruitmentPage, AppointmentsPage } from "./career-screens";
 import { SportsPortfolioPage } from "./sport-portfolio";
 import { Suspense } from "react";
@@ -23,19 +24,25 @@ import {
 import { ProfilePage, ProfileLayout, EditProfile, SettingsPage } from "./profile-screens";
 import { SubscriptionPage } from "./subscription-screen";
 import { FeedPage, NetworkPage, MessagesPage, OpportunitiesPage } from "./social-screens";
-import {
-  PlayPage,
-  CreateMatchPage,
-  MatchPage,
-  AgendaPage,
-  NotificationsPage,
-} from "./play-screens";
+import { PlayPage, CreateMatchPage, MatchPage, NotificationsPage } from "./play-screens";
 export function StudioScreen({ screen }: { screen: string }) {
   switch (screen) {
-    case 'outils': case 'recherches': case 'publications-programmees': case 'talents': case 'essais-groupes': case 'equipes': case 'calendrier-avance': case 'statistiques': return <ExtensionPage section={screen}/>;
-    case "candidatures": return <ApplicationsPage />;
-    case "recrutement": return <RecruitmentPage />;
-    case "rendez-vous": return <AppointmentsPage />;
+    case "outils":
+    case "recherches":
+    case "publications-programmees":
+    case "talents":
+    case "essais-groupes":
+    case "equipes":
+    case "statistiques":
+      return <ExtensionPage section={screen} />;
+    case "calendrier-avance":
+      return <AgendaPage />;
+    case "candidatures":
+      return <ApplicationsPage />;
+    case "recrutement":
+      return <RecruitmentPage />;
+    case "rendez-vous":
+      return <AppointmentsPage />;
     case "dossier-sportif":
       return <SportsPortfolioPage />;
     case "disciplines":

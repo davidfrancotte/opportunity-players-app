@@ -6,7 +6,7 @@ import {
   matchesDirectory,
   effectiveDirectoryFilters,
 } from "@/lib/directory";
-import { members } from "@/lib/social";
+import { members, connectedMemberIds } from "@/lib/social";
 import { memberSports } from "@/lib/trust";
 import { canViewMatch } from "@/lib/events";
 import {
@@ -119,12 +119,12 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
   }
   const videoURLs = useRef<string[]>([]);
   useEffect(() => {
-    const next = profile.videos.map((v) => v.url);
+    const next = [...profile.videos.map((v) => v.url), ...profile.media.filter(url => url.startsWith("blob:"))];
     videoURLs.current
       .filter((url) => !next.includes(url))
       .forEach((url) => URL.revokeObjectURL(url));
     videoURLs.current = next;
-  }, [profile.videos]);
+  }, [profile.videos, profile.media]);
   useEffect(() => () => videoURLs.current.forEach((url) => URL.revokeObjectURL(url)), []);
   const [draft, setDraft] = useState<Profile | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
@@ -172,6 +172,14 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
   const careerActor = actors.find((a) => a.id === careerActorId) || actors[0];
   const extensionKey = `${careerActor.id}:${careerActor.category}`;
   const extensionWorkspace = workspace(extensions, extensionKey);
+  const postURLs = useRef<string[]>([]);
+  useEffect(() => {
+    const drafts = Object.values(extensions.workspaces).flatMap(w => w.schedules.filter(p => p.status !== "cancelled"));
+    const next = [...new Set([...social.posts, ...drafts].flatMap(p => [p.image, p.video]).filter((url): url is string => !!url?.startsWith("blob:")))];
+    postURLs.current.filter(url => !next.includes(url)).forEach(url => URL.revokeObjectURL(url));
+    postURLs.current = next;
+  }, [social.posts, extensions.workspaces]);
+  useEffect(() => () => postURLs.current.forEach(url => URL.revokeObjectURL(url)), []);
   function dispatchExtension(action: ExtensionAction) {
     extensionDispatch({
       action,
@@ -199,6 +207,10 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
             avatar: profile.photo,
             sport: p.sport,
             text: p.text,
+            category: p.category,
+            opportunityCategory: p.opportunityCategory,
+            image: p.image,
+            video: p.video,
             likes: 0,
             liked: false,
             comments: [],
@@ -315,6 +327,7 @@ function DemoStateProvider({ children }: { children: ReactNode }) {
       context: {
         category: profile.category,
         radius: events.radius,
+        connections: connectedMemberIds(social, trust.blocked),
         premium: isPremium(social, profile.category),
         city: profileCity(profile.city),
         now: Date.now(),

@@ -206,6 +206,11 @@ export const appointmentPurposes = [
   "Préparer ma progression",
   "Échanger sur un projet sportif",
 ];
+export function unconfirmedAppointments(state: CareerState, actorId: string) {
+  return state.appointments
+    .filter(a => [a.requester, a.professional].includes(actorId) && (a.status === "pending" || a.status === "accepted"))
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
 export function availableSlots(
   state: CareerState,
   request: Appointment,

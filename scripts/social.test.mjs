@@ -6,7 +6,17 @@ import {
   members,
   opportunities,
   matchesQuery,
+  matchesOpportunityType,
 } from "../lib/social.ts";
+
+test("opportunités : les essais groupés se filtrent sans disparaître du recrutement", () => {
+  const trials = opportunities.filter(o => matchesOpportunityType(o, "Essais groupés"));
+  assert.deepEqual(trials.map(o => o.id), ["tryout"]);
+  assert.ok(matchesOpportunityType(trials[0], "Recrutement"));
+  assert.ok(matchesOpportunityType(trials[0], "Toutes"));
+  assert.equal(matchesOpportunityType(trials[0], "Coaching"), false);
+  assert.equal(matchesOpportunityType({ ...trials[0], groupTrial: false }, "Essais groupés"), false);
+});
 
 test("publication : ajout en tête, normalisation, limites et déduplication", () => {
   const state = createSocialState();

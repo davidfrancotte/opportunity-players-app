@@ -159,7 +159,7 @@ export function CareerNav() {
     >
       <Link href="/talents">Listes & portefeuille</Link>
       <Link href="/essais-groupes">Essais groupés</Link>
-      <Link href="/calendrier-avance">Agenda avancé</Link>
+      <Link href="/agenda">Agenda</Link>
       <Link href="/candidatures">
         <BriefcaseBusiness size={17} />
         {c("Candidatures & essais", "Applications & trials")}
@@ -167,10 +167,6 @@ export function CareerNav() {
       <Link href="/recrutement">
         <UsersRound size={17} />
         {c("Espace recrutement", "Recruitment workspace")}
-      </Link>
-      <Link href="/rendez-vous">
-        <CalendarDays size={17} />
-        {c("Mes rendez-vous", "My appointments")}
       </Link>
     </nav>
   );
@@ -246,6 +242,8 @@ function CareerPage({
 }
 function PremiumNotice() {
   const c = useCopy();
+  const { careerActor } = useDemo();
+  if (careerActor.premium) return <div className="career-empty"><h2>{c("Un espace pour les professionnels et collectifs", "A workspace for professionals and organisations")}</h2><p>{c("Votre Premium est actif. Cet outil est réservé aux profils professionnels et collectifs ; en tant que sportif, retrouvez vos démarches dans vos candidatures.", "Your Premium is active. This tool is for professional and organisation profiles; as an athlete, manage your applications instead.")}</p><Link href="/candidatures">{c("Mes candidatures", "My applications")}</Link></div>;
   return (
     <div className="career-empty">
       <LockKeyhole size={24} />
@@ -1006,12 +1004,13 @@ export function AppointmentsPage() {
   );
   return (
     <CareerPage
-      title={c("Rendez-vous", "Appointments")}
+      title={c("Demandes de RDV", "Meeting requests")}
       intro={c(
         "Demandez un échange. Après accord du professionnel, choisissez votre créneau.",
         "Request a meeting. Once the professional agrees, choose a time.",
       )}
     >
+      <Link href="/agenda" className="action secondary">{c("Retour à l’agenda", "Back to calendar")}</Link>
       <div className="event-tabs">
         <Button variant="ghost" aria-pressed={tab === "sent"} onClick={() => setTab("sent")}>
           {c("Mes demandes", "My requests")} ({sent.length})

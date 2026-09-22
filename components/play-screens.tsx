@@ -1,8 +1,8 @@
 "use client";
-import {ExtensionNotices} from './extension-screens';
-import {limits,calendarMonth} from '@/lib/entitlements';
-import { CareerAgenda, CareerNotices } from "./career-screens";
-import { T } from "./locale";
+import { ExtensionNotices } from "./extension-screens";
+import { limits, calendarMonth } from "@/lib/entitlements";
+import { CareerNotices } from "./career-screens";
+import { T, useLocale } from "./locale";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -20,11 +20,12 @@ import {
 import { Button } from "./ui/button";
 import { NativeSelect, NativeSelectOption } from "./ui/native-select";
 import { Field } from "./studio-ui";
+import { Input } from "./ui/input";
 import { ProfileLayout, Modal } from "./profile-screens";
 import { NetworkSections } from "./event-navigation";
 import { useDemo } from "./demo-provider";
 import { sports, displayName } from "@/lib/model";
-import { members, isPremium } from "@/lib/social";
+import { members, isPremium, connectedMemberIds } from "@/lib/social";
 import { monthlyPrice } from "@/lib/pricing";
 import {
   cities,
@@ -39,11 +40,11 @@ import {
 } from "@/lib/events";
 
 function useEventContext() {
-  const { profile, social,events } = useDemo();
+  const { profile, social, events } = useDemo();
   return {
     premium: isPremium(social, profile.category),
-    category:profile.category,
-    radius:events.radius,
+    category: profile.category,
+    radius: events.radius,
     city: profileCity(profile.city),
     now: Date.now(),
   };
@@ -75,7 +76,20 @@ function EventError() {
   ) : null;
 }
 function PremiumCard({ creation = false }: { creation?: boolean }) {
-  const { profile } = useDemo();
+  const { profile, social } = useDemo();
+  if (isPremium(social, profile.category))
+    return creation ? (
+      <section className="event-empty">
+        <h2>Limite de matchs actifs atteinte.</h2>
+        <p>
+          Votre Premium est déjà actif. Attendez la fin d’un match ou annulez une rencontre qui
+          n’aura pas lieu pour en organiser une nouvelle.
+        </p>
+        <Link href="/jouer" className="action secondary">
+          Gérer mes matchs
+        </Link>
+      </section>
+    ) : null;
   return (
     <section className="event-premium">
       <LockKeyhole size={26} />
@@ -102,7 +116,7 @@ function PremiumCard({ creation = false }: { creation?: boolean }) {
     </section>
   );
 }
-function MatchCard({ match: m }: { match: Match }) {
+export function MatchCard({ match: m }: { match: Match }) {
   const { city } = useEventContext();
   const first = m.slots.find((s) => s.id === m.confirmed) || m.slots[0];
   return (
@@ -144,8 +158,106 @@ function MatchCard({ match: m }: { match: Match }) {
     </Link>
   );
 }
+function NearbyMatchAlerts({ sport }: { sport: string }) {
+  const { t } = useLocale();
+  const { profile, events, extensionWorkspace, extensions, dispatchExtension, careerActor } =
+    useDemo();
+  const [name, setName] = useState("");
+  const ctx = useEventContext();
+  if (!ctx.premium) return null;
+  const saved = extensionWorkspace.searches.filter((s) => s.kind === "events" && s.alerts);
+  return (
+    <details className="community-filters nearby-alerts">
+      <summary>
+        <Bell size={16} />
+        <T>{"Alertes de matchs"}</T>
+      </summary>
+      <p className="field-hint">
+        <T>
+          {
+            "Recevoir une alerte pour les nouveaux matchs correspondant au sport et au rayon sélectionnés."
+          }
+        </T>
+      </p>
+      {careerActor.id !== "self" ? (
+        <p>
+          <T>{"Revenez à votre profil pour gérer vos alertes."}</T>
+        </p>
+      ) : (
+        <form
+          className="social-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!name.trim()) return;
+            const seen = events.matches
+              .filter(
+                (m) =>
+                  m.open &&
+                  !m.cancelled &&
+                  !m.confirmed &&
+                  canViewMatch(m, ctx) &&
+                  (sport === "Tous" || m.sport === sport) &&
+                  m.slots.some((s) => Date.parse(s.start) > Date.now()),
+              )
+              .map((m) => m.id);
+            dispatchExtension({
+              type: "search",
+              value: {
+                id: crypto.randomUUID(),
+                name,
+                kind: "events",
+                filters: { sport, radius: String(events.radius), city: profile.city },
+                alerts: true,
+                seen,
+              },
+            });
+          }}
+        >
+          <label htmlFor="match-alert-name">
+            <T>{"Nom de l’alerte"}</T>
+          </label>
+          <Input
+            id="match-alert-name"
+            required
+            maxLength={160}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Button type="submit">
+            <T>{"Créer l’alerte"}</T>
+          </Button>
+        </form>
+      )}
+      {extensions.error && (
+        <p role="alert" className="event-error">
+          {extensions.error}
+        </p>
+      )}
+      <div role="status">
+        {saved.map((s) => (
+          <div className="community-alert-item" key={s.id}>
+            <span>
+              {s.name} · {t(s.filters.sport)} · {s.filters.radius} km
+            </span>
+            <Button
+              variant="ghost"
+              aria-label={t("Supprimer l’alerte") + " " + s.name}
+              onClick={() => dispatchExtension({ type: "search-remove", id: s.id })}
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <p className="field-hint">
+        <T>{"Alertes simulées pendant cette visite uniquement."}</T>
+      </p>
+    </details>
+  );
+}
 export function PlayPage() {
-  const { events,dispatchEvent } = useDemo(),
+  const { t } = useLocale();
+  const { events, dispatchEvent } = useDemo(),
     ctx = useEventContext();
   const [tab, setTab] = useState("invitations"),
     [sport, setSport] = useState("Tous");
@@ -161,7 +273,7 @@ export function PlayPage() {
             m.host !== "me" &&
             !m.cancelled &&
             !m.confirmed &&
-            limits(ctx.category,ctx.premium).discover &&
+            limits(ctx.category, ctx.premium).discover &&
             distanceKm(ctx.city, m.city) <= (ctx.premium ? ctx.radius : 50)),
   );
   return (
@@ -175,13 +287,6 @@ export function PlayPage() {
         <p>Moins de messages pour s’organiser. Plus de moments à partager.</p>
       </div>
       <NetworkSections active="play" />
-      {ctx.premium&&<label className="event-select-label">Rayon des matchs ouverts<NativeSelect aria-label="Rayon des matchs ouverts" value={String(events.radius)} onChange={e=>dispatchEvent({type:'discovery',radius:Number(e.target.value)})}>{[10,25,50,100,200,500].map(n=><NativeSelectOption key={n} value={String(n)}>{n} km</NativeSelectOption>)}</NativeSelect></label>}
-      <nav className="extension-nav"><Link href="/recherches">Alertes de matchs</Link><Link href="/calendrier-avance">Récurrence & agenda</Link></nav>
-      <Link className="action primary" href="/organiser">
-        <Plus size={18} />
-        <T>{"Organiser un match"}</T>
-        {!ctx.premium && <small>1 / mois inclus</small>}
-      </Link>
       <div className="event-tabs" role="group" aria-label="Filtrer les matchs">
         {[
           ["invitations", "Mes invitations"],
@@ -189,12 +294,14 @@ export function PlayPage() {
           ["nearby", "À proximité"],
         ].map(([v, l]) => (
           <Button key={v} variant="ghost" aria-pressed={tab === v} onClick={() => setTab(v)}>
-            {l}
-            {v === "nearby" && !limits(ctx.category,ctx.premium).discover && <LockKeyhole size={12} />}
+            <T>{l}</T>
+            {v === "nearby" && !limits(ctx.category, ctx.premium).discover && (
+              <LockKeyhole size={12} />
+            )}
           </Button>
         ))}
       </div>
-      {tab === "nearby" && !limits(ctx.category,ctx.premium).discover ? (
+      {tab === "nearby" && !limits(ctx.category, ctx.premium).discover ? (
         <PremiumCard />
       ) : (
         <>
@@ -213,10 +320,53 @@ export function PlayPage() {
               ))}
             </NativeSelect>
           </label>
+          {(tab === "invitations" || tab === "nearby") && (
+            <label className="event-select-label">
+              <T>{"Rayon des matchs ouverts"}</T>
+              <NativeSelect
+                aria-label={t("Rayon des matchs ouverts")}
+                disabled={!ctx.premium}
+                value={String(ctx.premium ? events.radius : 50)}
+                onChange={(e) =>
+                  dispatchEvent({ type: "discovery", radius: Number(e.target.value) })
+                }
+              >
+                {[10, 25, 50, 100, 200, 500].map((n) => (
+                  <NativeSelectOption key={n} value={String(n)}>
+                    {n} km
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              {!ctx.premium && (
+                <small>
+                  <T>
+                    {
+                      "Rayon personnalisable avec Premium. Vos invitations personnelles restent visibles quelle que soit la distance."
+                    }
+                  </T>
+                </small>
+              )}
+              {ctx.premium && tab === "invitations" && (
+                <small>
+                  <T>
+                    {
+                      "Ce rayon s’applique aux matchs ouverts à proximité, pas à vos invitations personnelles."
+                    }
+                  </T>
+                </small>
+              )}
+            </label>
+          )}
+          {tab === "nearby" && ctx.premium && <NearbyMatchAlerts sport={sport} />}
+          <Link className="action primary" href="/organiser">
+            <Plus size={18} />
+            <T>{"Organiser un match"}</T>
+            {!ctx.premium && <small>1 / mois inclus</small>}
+          </Link>
           {tab === "nearby" && (
             <p className="event-note">
               {ctx.city
-                ? `À 50 km de ${ctx.city}. Distances approximatives entre villes de démonstration.`
+                ? `${events.radius} km · ${ctx.city}. ${t("Distances approximatives entre villes de démonstration.")}`
                 : "Indiquez une ville prise en charge dans votre profil pour découvrir les matchs : Liège, Bruxelles, Namur, Charleroi, Louvain, Huy ou Verviers."}
             </p>
           )}
@@ -254,13 +404,15 @@ function blankSlot(): DraftSlot {
   return { id: crypto.randomUUID(), date: "", time: "18:00", minutes: 90 };
 }
 export function CreateMatchPage() {
-  const { profile, events, dispatchEvent } = useDemo(),
+  const { profile, events, dispatchEvent, social, trust } = useDemo(),
     ctx = useEventContext(),
     router = useRouter();
+  const connectedIds = connectedMemberIds(social, trust.blocked);
+  const connections = members.filter((m) => connectedIds.includes(m.id));
   const [step, setStep] = useState(1),
     [title, setTitle] = useState(""),
     [sport, setSport] = useState(profile.sport || "Padel"),
-    [level,setLevel] = useState(''),
+    [level, setLevel] = useState(""),
     [city, setCity] = useState(ctx.city || "Liège"),
     [venue, setVenue] = useState("");
   const [minimum, setMinimum] = useState(suggestedTotals[profile.sport] || 2),
@@ -276,7 +428,7 @@ export function CreateMatchPage() {
     setSlots([blankSlot()]);
     const q = new URLSearchParams(window.location.search),
       id = q.get("invite");
-    if (id && members.some((m) => m.id === id)) setInvitees([id]);
+    if (id && connectedIds.includes(id)) setInvitees([id]);
     const original = events.matches.find((m) => m.id === q.get("copie") && m.host === "me");
     if (original) {
       setTitle(original.title);
@@ -288,7 +440,7 @@ export function CreateMatchPage() {
       setHostPlays(original.hostPlays);
       setOpen(original.open);
       setPlusOne(original.plusOne);
-      setInvitees(original.invitees);
+      setInvitees(original.invitees.filter((id) => connectedIds.includes(id)));
     }
   }, []); // Copy details only, never the old dates or votes.
   useEffect(() => {
@@ -346,7 +498,13 @@ export function CreateMatchPage() {
           On organise<span> ?</span>
         </h1>
       </div>
-      {events.matches.filter(m=>m.host==='me'&&(ctx.premium?!m.cancelled&&m.slots.some(s=>Date.parse(s.start)>Date.now()):m.createdAt&&calendarMonth(m.createdAt)===calendarMonth())).length>=limits(ctx.category,ctx.premium).events ? (
+      {events.matches.filter(
+        (m) =>
+          m.host === "me" &&
+          (ctx.premium
+            ? !m.cancelled && m.slots.some((s) => Date.parse(s.start) > Date.now())
+            : m.createdAt && calendarMonth(m.createdAt) === calendarMonth()),
+      ).length >= limits(ctx.category, ctx.premium).events ? (
         <PremiumCard creation />
       ) : (
         <>
@@ -389,7 +547,18 @@ export function CreateMatchPage() {
                 </label>
                 <label>
                   Niveau souhaité
-                  <NativeSelect aria-label="Niveau du match" value={level} onChange={e=>setLevel(e.target.value)}><NativeSelectOption value="">Tous niveaux</NativeSelectOption>{['Débutant','Intermédiaire','Confirmé','Compétition'].map(l=><NativeSelectOption value={l} key={l}>{l}</NativeSelectOption>)}</NativeSelect>
+                  <NativeSelect
+                    aria-label="Niveau du match"
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)}
+                  >
+                    <NativeSelectOption value="">Tous niveaux</NativeSelectOption>
+                    {["Débutant", "Intermédiaire", "Confirmé", "Compétition"].map((l) => (
+                      <NativeSelectOption value={l} key={l}>
+                        {l}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
                 </label>
                 <label>
                   Ville du match
@@ -532,11 +701,17 @@ export function CreateMatchPage() {
               <>
                 <h2>Qui rejoint le terrain ?</h2>
                 <p className="event-note">
-                  Contacts fictifs. Une invitation personnelle peut recevoir une réponse même sans
-                  abonnement.
+                  Invitez vos connexions acceptées. Suivre une personne ou lui envoyer une demande
+                  de connexion ne suffit pas. La réponse à une invitation reste gratuite.
                 </p>
                 <div className="invite-list">
-                  {members.map((m) => (
+                  {!connections.length && (
+                    <p className="event-note">
+                      Aucune connexion acceptée pour le moment.{" "}
+                      <Link href="/reseau">Développer mon réseau</Link>
+                    </p>
+                  )}
+                  {connections.map((m) => (
                     <label className="event-check" key={m.id}>
                       <input
                         type="checkbox"
@@ -994,92 +1169,6 @@ function MatchDetail({ match: m }: { match: Match }) {
   );
 }
 
-export function AgendaPage() {
-  const { events } = useDemo();
-  const [pending, setPending] = useState(false);
-  const entries = events.matches
-    .filter(
-      (m) =>
-        personalMatch(m) &&
-        !m.cancelled &&
-        (pending
-          ? !m.confirmed
-          : !!m.confirmed &&
-            (m.host === "me" ||
-              m.replies.some(
-                (r) => r.user === "me" && r.status === "approved" && r.slots.includes(m.confirmed!),
-              ))),
-    )
-    .flatMap((m) =>
-      m.slots
-        .filter((s) => (pending || s.id === m.confirmed) && Date.parse(s.start) > Date.now())
-        .map((slot) => ({ m, slot })),
-    )
-    .sort((a, b) => Date.parse(a.slot.start) - Date.parse(b.slot.start));
-  return (
-    <ProfileLayout>
-      <div className="event-title">
-        <span className="mini-kicker">VOTRE TEMPS DE JEU</span>
-        <h1>
-          <T>{"Mon agenda"}</T>
-          <span>.</span>
-        </h1>
-        <p>Vos matchs, sans perdre le fil.</p>
-      </div>
-      <div className="event-tabs">
-        <Button variant="ghost" aria-pressed={!pending} onClick={() => setPending(false)}>
-          Confirmés
-        </Button>
-        <Button variant="ghost" aria-pressed={pending} onClick={() => setPending(true)}>
-          À organiser
-        </Button>
-      </div>
-      {entries.map(({ m, slot }) => (
-        <Link className="agenda-item" key={m.id + slot.id} href={`/match?id=${m.id}`}>
-          <span className="agenda-date">
-            {new Intl.DateTimeFormat("fr", {
-              day: "2-digit",
-              timeZone: "Europe/Brussels",
-            }).format(new Date(slot.start))}
-            <small>
-              {new Intl.DateTimeFormat("fr", {
-                month: "short",
-                timeZone: "Europe/Brussels",
-              }).format(new Date(slot.start))}
-            </small>
-          </span>
-          <span>
-            <small>
-              {pending ? "PROPOSITION" : "CONFIRMÉ"} · {m.sport}
-            </small>
-            <strong>{m.title}</strong>
-            <p>
-              {dateLabel(slot.start)} · {m.city}
-            </p>
-          </span>
-          <ArrowUpRight size={18} />
-        </Link>
-      ))}
-      {!entries.length && (
-        <div className="event-empty">
-          <CalendarDays size={32} />
-          <h2>Le terrain vous attend.</h2>
-          <p>
-            {pending ? "Aucune proposition à venir." : "Les créneaux confirmés apparaîtront ici."}
-          </p>
-          <Link href="/jouer" className="action secondary">
-            Découvrir mes matchs
-          </Link>
-        </div>
-      )}
-      <p className="event-note">
-        Agenda de démonstration · heure de Bruxelles. Pas de synchronisation avec un calendrier
-        externe.
-      </p>
-      <CareerAgenda />
-    </ProfileLayout>
-  );
-}
 export function NotificationsPage() {
   const { events, dispatchEvent, dispatchSocial, requestAccess } = useDemo();
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -1106,7 +1195,7 @@ export function NotificationsPage() {
         </Button>
       </div>
       <div className="notification-list">
-        <ExtensionNotices/>
+        <ExtensionNotices />
         <CareerNotices unreadOnly={unreadOnly} />
         {list.map((n) => (
           <Link

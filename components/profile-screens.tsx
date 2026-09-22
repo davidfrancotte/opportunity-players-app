@@ -35,6 +35,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useDemo } from "./demo-provider";
 import { PlanStatus } from "./subscription-ui";
+import { MediaUpload } from "./media-upload";
 import { ProfileExtensions } from "./trust-screens";
 import { ProfileDirectoryFields } from "./directory-fields";
 import { normalizeMeasurement } from "@/lib/athlete";
@@ -78,7 +79,7 @@ function BottomNav() {
     "/abonnement",
   ].includes(pathname)
     ? "/profil"
-    : ["/jouer", "/organiser", "/match", "/agenda"].includes(pathname)
+    : ["/jouer", "/organiser", "/match", "/agenda", "/calendrier-avance"].includes(pathname)
       ? "/reseau"
       : ["/candidatures", "/recrutement"].includes(pathname) ? "/opportunities"
       : pathname === "/rendez-vous" ? "/reseau" : pathname;
@@ -546,17 +547,17 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
             )}
             {tab === "media" && (
               <section aria-label="Mes médias" className="tab-body">
-                <div className="card-heading section-heading">
+                <div className="card-heading section-heading media-heading">
                   <h3>
                     <T>{"Votre sport en images."}</T>
                   </h3>
-                  <Button variant="ghost" onClick={() => setMediaOpen(true)}>
+                  <Button className="small-primary media-add-button" onClick={() => setMediaOpen(true)}>
                     <Plus size={16} />
-                    <T>{"Ajouter"}</T>
+                    <T>{"Ajouter un média"}</T>
                   </Button>
                 </div>
                 <p className="section-note">
-                  <T>{"Galerie de démonstration. Aucun téléversement ni publication."}</T>
+                  <T>{"Importez une photo ou une vidéo depuis votre appareil. Aperçu local uniquement, sans publication."}</T>
                 </p>
                 <Link className="action secondary" href="/dossier-sportif">
                   <T>{"Ajouter des vidéos et distinctions"}</T>
@@ -564,30 +565,35 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
                 {profile.media.length ? (
                   <div className="media-grid">
                     {profile.media.map((src) => (
-                      <button key={src} onClick={() => setSelectedMedia(src)}>
+                      <button key={src} onClick={() => setSelectedMedia(src)} aria-label={photos.find((p) => p.src === src)?.label || "Agrandir la photo importée"}>
                         <img
                           src={src}
-                          alt={photos.find((p) => p.src === src)?.label || "Illustration sportive"}
+                          alt={photos.find((p) => p.src === src)?.label || "Photo importée"}
                         />
                         <span>
-                          {photos.find((p) => p.src === src)?.label}
+                          {photos.find((p) => p.src === src)?.label || "Photo importée"}
                           <ArrowUpRight size={16} />
                         </span>
                       </button>
                     ))}
                   </div>
-                ) : (
+                ) : profile.videos.length ? null : (
                   <EmptyCard
                     icon={Camera}
                     title="Un autre regard sur votre sport."
-                    text="Choisissez des visuels de démonstration pour personnaliser votre galerie."
+                    text="Importez un média depuis votre appareil pour personnaliser votre galerie."
                     action={
                       <Button onClick={() => setMediaOpen(true)} className="small-primary">
-                        <T>{"Choisir une image"}</T>
+                        <T>{"Importer mon premier média"}</T>
                       </Button>
                     }
                   />
                 )}
+                {profile.videos.map(video => <article className="profile-video-card" key={video.id}>
+                  <video controls playsInline preload="metadata" src={video.url} aria-label={video.title} />
+                  <h3>{video.title}</h3><p>{video.sport}</p>
+                  <Button variant="ghost" onClick={() => { setProfile({ ...profile, videos: profile.videos.filter(v => v.id !== video.id) }); notify("Vidéo retirée de la galerie."); }}><Trash2 size={16} />Retirer la vidéo</Button>
+                </article>)}
               </section>
             )}
           </div>
@@ -620,9 +626,11 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
       <Modal
         open={mediaOpen}
         onOpenChange={setMediaOpen}
-        title="Votre galerie sportive."
-        description="Ajoutez une image parmi les visuels fictifs. Vous pourrez la retirer à tout moment."
+        title="Ajouter un média"
+        description="Importez une photo ou une vidéo. Vous pourrez la retirer à tout moment."
       >
+        {mediaOpen && <MediaUpload onAdded={() => setMediaOpen(false)} />}
+        <details className="demo-media-picker"><summary>Ou choisir une image de démonstration</summary>
         <div className="image-picker">
           {photos.map((p) => {
             const added = profile.media.includes(p.src);
@@ -642,19 +650,19 @@ export function ProfilePage({ section = "about" }: { section?: "about" | "career
               </button>
             );
           })}
-        </div>
+        </div></details>
       </Modal>
       <Modal
         open={!!selectedMedia}
         onOpenChange={() => setSelectedMedia(null)}
-        title={photos.find((p) => p.src === selectedMedia)?.label || "Illustration sportive"}
-        description="Image générée · personne fictive · galerie de démonstration."
+        title={photos.find((p) => p.src === selectedMedia)?.label || "Photo importée"}
+        description={selectedMedia?.startsWith("blob:") ? "Fichier importé depuis votre appareil · aperçu local uniquement." : "Image générée · personne fictive · galerie de démonstration."}
       >
         {selectedMedia && (
           <img
             className="lightbox-image"
             src={selectedMedia}
-            alt={photos.find((p) => p.src === selectedMedia)?.label || "Illustration sportive"}
+            alt={photos.find((p) => p.src === selectedMedia)?.label || "Photo importée"}
           />
         )}
         <Button
@@ -1015,6 +1023,7 @@ export function SettingsPage() {
       <div className="settings-grid">
         <ExtensionNav/>
         <PlanStatus />
+        <Link href="/abonnement" className="settings-action">Gérer mon abonnement <ArrowUpRight size={17} /></Link>
         <section className="info-card">
           <div className="card-heading">
             <h2>

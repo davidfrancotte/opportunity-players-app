@@ -1,44 +1,47 @@
 "use client";
-import {ExtensionNav,SaveDirectorySearch} from './extension-screens';
-import {isPremium} from '@/lib/social';
-import {advancedDirectoryKeys,effectiveDirectoryFilters} from '@/lib/directory';
-import { PersonalizedRecommendations, CareerNav, ApplyButton, AppointmentRequestButton } from "./career-screens";
-import { T } from "./locale";
+import { isPremium, isConnected, inCommunityFeed, matchesOpportunityType } from "@/lib/social";
+import { ConnectionControls } from "./connection-controls";
+import { ApplyButton, AppointmentRequestButton } from "./career-screens";
+import { T, useLocale } from "./locale";
+import {
+  feedCategories,
+  opportunityCategories,
+  emptyFeedFilters,
+  matchesFeed,
+  memberSearchFilters,
+  type FeedCategory,
+  type OpportunityCategory,
+} from "@/lib/community";
+import { canViewMatch, profileCity } from "@/lib/events";
+import { moderateText } from "@/lib/trust";
+import { MatchCard } from "./play-screens";
+import { PostExcerpt } from "./post-excerpt";
+import { PostAttachment, usePostAttachment } from "./post-attachment";
 import Link from "next/link";
-import { ExtraDirectoryFilters } from "./sport-profile-fields";
 import { ageOn } from "@/lib/sport-profile";
 import { MemberDossier, SafetyActions } from "./trust-screens";
 import { memberSports } from "@/lib/trust";
 import {
-  changeDirectoryKind,
-  collectiveTypes,
   countrySuggestions,
-  dominantSides,
   emptyDirectoryFilters,
-  genders,
-  levels,
   matchesDirectory,
-  positionsFor,
-  professionalTypes,
-  sideLabel,
   type DirectoryFilters,
 } from "@/lib/directory";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  ChevronDown,
   ArrowLeft,
   ArrowUpRight,
   Bookmark,
   Check,
   Heart,
-  ImagePlus,
   MapPin,
   MessageCircle,
   Plus,
   Search,
   Send,
   SlidersHorizontal,
-  UsersRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,10 +49,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { useDemo } from "./demo-provider";
 import { PlanStatus, LockedFeature } from "./subscription-ui";
-import { NetworkSections, PlayHomeCard } from "./event-navigation";
+import { NetworkSections } from "./event-navigation";
 import { ProfileLayout, Modal } from "./profile-screens";
 import { Submit } from "./studio-ui";
-import { displayName, photos, sports } from "@/lib/model";
+import { displayName, sports } from "@/lib/model";
 import {
   members,
   opportunities,
@@ -150,38 +153,146 @@ function SportSelect({
 }
 
 export function FeedPage() {
-  const { profile, social, dispatchSocial, notify, requestAccess, access } = useDemo();
-  const [sport, setSport] = useState("Tous");
+  const {
+    profile,
+    social,
+    dispatchSocial,
+    notify,
+    requestAccess,
+    access,
+    events,
+    trust,
+    dispatchExtension,
+    careerActor,
+    extensionWorkspace,
+  } = useDemo();
+  const { t } = useLocale();
+  const premium = isPremium(social, profile.category);
+  const [feedFilters, setFeedFilters] = useState({ ...emptyFeedFilters });
+  const [showFilters, setShowFilters] = useState(false);
+  const [postCategory, setPostCategory] = useState<FeedCategory>("News");
+  const [postOpportunity, setPostOpportunity] = useState<OpportunityCategory>(
+    opportunityCategories[0],
+  );
+  const [scheduled, setScheduled] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [composeError, setComposeError] = useState("");
   const [compose, setCompose] = useState(false);
-  const [postSport, setPostSport] = useState(profile.sport);
+  const [postSport, setPostSport] = useState("-");
   const [text, setText] = useState("");
-  const [photo, setPhoto] = useState("");
+  const attachment = usePostAttachment();
   const [commentsId, setCommentsId] = useState<string | null>(null);
   const [comment, setComment] = useState("");
-  const posts = social.posts.filter((p) => sport === "Tous" || p.sport === sport);
+  const posts = social.posts.filter(
+    (p) =>
+      !trust.blocked.includes(p.author) &&
+      inCommunityFeed(social, p.author) &&
+      matchesFeed(p, feedFilters, premium),
+  );
+  const openMatches = events.matches.filter(
+    (m) =>
+      m.open &&
+      !m.cancelled &&
+      !m.confirmed &&
+      m.slots.some((s) => Date.parse(s.start) > Date.now()) &&
+      !trust.blocked.includes(m.host) &&
+      canViewMatch(m, {
+        premium,
+        category: profile.category,
+        city: profileCity(profile.city),
+        radius: events.radius,
+        now: Date.now(),
+      }) &&
+      matchesFeed(
+        { category: "Matchs ouverts", sport: m.sport, text: m.title + " " + m.city },
+        feedFilters,
+        premium,
+      ),
+  );
+  const plannedCount = extensionWorkspace.schedules.filter((p) => p.status === "planned").length;
   const selected = social.posts.find((p) => p.id === commentsId);
   return (
     <ProfileLayout>
-      <div className="social-title">
-        <div>
-          <span className="mini-kicker">
-            <T>{"VOTRE SPORT. VOTRE RÉSEAU."}</T>
-          </span>
-          <h1>
-            <T>{"Dans le mouvement"}</T>
-            <span>.</span>
-          </h1>
-        </div>
+      <div className="social-title community-heading">
+        <h1>
+          <T>{"Le fil de votre communauté"}</T>
+        </h1>
+        {premium && (
+          <Button
+            variant="ghost"
+            aria-label={t("Filtrer le fil")}
+            aria-expanded={showFilters}
+            aria-controls="feed-filters"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <SlidersHorizontal size={20} />
+            <T>{"Filtres"}</T>
+          </Button>
+        )}
       </div>
-      <PlanStatus compact />
-      <nav className="extension-nav"><Link href="/publications-programmees">Programmer une publication</Link><Link href="/outils">Mes outils</Link></nav>
-      <PlayHomeCard />
-      <PersonalizedRecommendations />
+      {premium && showFilters && (
+        <section id="feed-filters" className="community-filters" aria-label={t("Filtres du fil")}>
+          <SearchField
+            label={t("Rechercher dans le fil")}
+            value={feedFilters.query}
+            onChange={(query) => setFeedFilters((f) => ({ ...f, query }))}
+          />
+          <label>
+            <T>{"Catégorie"}</T>
+            <NativeSelect
+              aria-label={t("Catégorie du fil")}
+              value={feedFilters.category}
+              onChange={(e) =>
+                setFeedFilters((f) => ({
+                  ...f,
+                  category: e.target.value,
+                  opportunityCategory: "Tous",
+                }))
+              }
+            >
+              {["Tous", ...feedCategories].map((v) => (
+                <NativeSelectOption key={v} value={v}>
+                  {t(v)}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </label>
+          {feedFilters.category === "Opportunités" && (
+            <label>
+              <T>{"Type d’opportunité"}</T>
+              <NativeSelect
+                aria-label={t("Type d’opportunité")}
+                value={feedFilters.opportunityCategory}
+                onChange={(e) =>
+                  setFeedFilters((f) => ({ ...f, opportunityCategory: e.target.value }))
+                }
+              >
+                {["Tous", ...opportunityCategories].map((v) => (
+                  <NativeSelectOption key={v} value={v}>
+                    {t(v)}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </label>
+          )}
+          <SportSelect
+            id="feed-sport"
+            value={feedFilters.sport}
+            onChange={(sport) => setFeedFilters((f) => ({ ...f, sport }))}
+          />
+          <Button variant="ghost" onClick={() => setFeedFilters({ ...emptyFeedFilters })}>
+            <T>{"Réinitialiser les filtres"}</T>
+          </Button>
+        </section>
+      )}
       <button
         type="button"
         className="compose-launch"
         onClick={() => {
-          if (requestAccess("publish")) setCompose(true);
+          if (requestAccess("publish")) {
+            setComposeError("");
+            setCompose(true);
+          }
         }}
       >
         <img src={profile.photo} alt="" />
@@ -193,25 +304,23 @@ export function FeedPage() {
         </span>
         <Plus size={22} />
       </button>
-      <Chips
-        label="Filtrer les publications par sport"
-        values={["Tous", ...sports]}
-        value={sport}
-        onChange={setSport}
-      />
-      <div className="list-caption">
+      {premium && plannedCount > 0 && (
+        <Link className="text-link community-planned" href="/publications-programmees">
+          {plannedCount} <T>{"publications programmées"}</T>
+        </Link>
+      )}
+      <div className="list-caption" role="status">
         <span>
-          <T>{"Le fil de votre communauté"}</T>
-        </span>
-        <span>
-          {posts.length}
-          <T>{"publications"}</T>
+          {posts.length + openMatches.length} <T>{"publications"}</T>
         </span>
       </div>
       <p className="demo-context">
         <T>{"Profils et publications fictifs · rien n’est publié en ligne."}</T>
       </p>
       <div className="feed-list">
+        {openMatches.map((match) => (
+          <MatchCard key={match.id} match={match} />
+        ))}
         {posts.map((post) => (
           <article key={post.id} className="post-card">
             <header className="post-author">
@@ -222,12 +331,49 @@ export function FeedPage() {
               </div>
               <span className="post-sport">{post.sport}</span>
             </header>
-            <p className="post-text">{post.text}</p>
-            {post.image && (
-              <img
+            <p className="post-category">
+              <T>{post.category || "Divers"}</T>
+              {post.opportunityCategory && (
+                <>
+                  {" "}
+                  · <T>{post.opportunityCategory}</T>
+                </>
+              )}
+            </p>
+            <button
+              type="button"
+              className="post-open"
+              aria-label={
+                t("Ouvrir la publication de") +
+                " " +
+                (post.author === "self" ? displayName(profile) : post.name)
+              }
+              onClick={() => {
+                setCommentsId(post.id);
+                setComment("");
+              }}
+            >
+              <PostExcerpt text={post.text} />
+              <span className="post-read-more">
+                <T>{"Voir la publication"}</T>
+                <ArrowUpRight size={14} />
+              </span>
+              {post.image && (
+                <img
+                  className="post-image"
+                  src={post.image}
+                  alt={"Illustration sportive · " + post.sport}
+                />
+              )}
+            </button>
+            {post.video && (
+              <video
                 className="post-image"
-                src={post.image}
-                alt={"Illustration sportive · " + post.sport}
+                controls
+                playsInline
+                preload="metadata"
+                src={post.video}
+                aria-label="Vidéo de la publication"
               />
             )}
             <div className="post-actions">
@@ -260,15 +406,18 @@ export function FeedPage() {
           </article>
         ))}
       </div>
-      {!posts.length && (
+      {!posts.length && !openMatches.length && (
         <Empty
           title="Le terrain est à vous."
-          text="Aucune publication pour cette discipline. Partagez la première publication fictive ou choisissez un autre sport."
+          text="Aucune publication pour ces critères. Modifiez les filtres ou partagez une publication."
         />
       )}
       <Modal
         open={compose}
-        onOpenChange={setCompose}
+        onOpenChange={(open) => {
+          setCompose(open);
+          if (!open) attachment.clear();
+        }}
         title="À vous de jouer."
         description="Publication de démonstration, visible uniquement pendant cette visite. N’utilisez pas d’informations personnelles."
       >
@@ -276,31 +425,119 @@ export function FeedPage() {
           className="social-form"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!text.trim()) return;
+            if (!text.trim() || attachment.busy || attachment.error) return;
             if (!requestAccess("publish")) return;
-            dispatchSocial({
-              type: "post",
-              post: {
-                id: crypto.randomUUID(),
-                author: "self",
-                name: displayName(profile),
-                role: profile.headline,
-                avatar: profile.photo,
-                sport: postSport,
-                text,
-                image: photo || undefined,
-                likes: 0,
-                liked: false,
-                comments: [],
-              },
-            });
+            setComposeError("");
+            const moderation = moderateText(text);
+            if (moderation) {
+              setComposeError(t("Ce contenu ne peut pas être publié."));
+              return;
+            }
+            const classification = {
+              category: postCategory,
+              opportunityCategory: postCategory === "Opportunités" ? postOpportunity : undefined,
+            };
+            if (scheduled) {
+              if (!premium) {
+                setComposeError(t("La programmation est réservée aux membres Premium."));
+                return;
+              }
+              if (careerActor.id !== "self") {
+                setComposeError(t("Revenez à votre profil pour programmer une publication."));
+                return;
+              }
+              const date = Date.parse(scheduledAt);
+              if (!Number.isFinite(date) || date <= Date.now()) {
+                setComposeError(t("Choisissez une date et une heure futures."));
+                return;
+              }
+              dispatchExtension({
+                type: "schedule",
+                value: {
+                  id: crypto.randomUUID(),
+                  text,
+                  sport: postSport,
+                  image:
+                    attachment.media && !attachment.media.video ? attachment.media.url : undefined,
+                  video: attachment.media?.video ? attachment.media.url : undefined,
+                  ...classification,
+                  start: new Date(date).toISOString(),
+                  status: "planned",
+                },
+              });
+              notify(
+                t(
+                  "Publication programmée dans la démo. Gardez cet onglet ouvert pour la diffusion.",
+                ),
+              );
+            } else {
+              dispatchSocial({
+                type: "post",
+                post: {
+                  id: crypto.randomUUID(),
+                  author: "self",
+                  name: displayName(profile),
+                  role: profile.headline,
+                  avatar: profile.photo,
+                  sport: postSport,
+                  text,
+                  image:
+                    attachment.media && !attachment.media.video ? attachment.media.url : undefined,
+                  video: attachment.media?.video ? attachment.media.url : undefined,
+                  ...classification,
+                  likes: 0,
+                  liked: false,
+                  comments: [],
+                },
+              });
+              notify(t("Publication ajoutée au fil de démonstration uniquement."));
+            }
             setText("");
-            setPhoto("");
-            setSport("Tous");
+            attachment.clear(true);
+            setPostSport("-");
+            setScheduled(false);
+            setScheduledAt("");
+            setFeedFilters({ ...emptyFeedFilters });
             setCompose(false);
-            notify("Publication ajoutée au fil de démonstration uniquement.");
           }}
         >
+          {composeError && (
+            <p role="alert" className="event-error">
+              {composeError}
+            </p>
+          )}
+          <label htmlFor="post-category">
+            <T>{"Catégorie"}</T>
+          </label>
+          <NativeSelect
+            id="post-category"
+            value={postCategory}
+            onChange={(e) => setPostCategory(e.target.value as FeedCategory)}
+          >
+            {feedCategories.map((v) => (
+              <NativeSelectOption key={v} value={v}>
+                {t(v)}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          {postCategory === "Opportunités" && (
+            <>
+              <label htmlFor="post-opportunity">
+                <T>{"Type d’opportunité"}</T>
+              </label>
+              <NativeSelect
+                id="post-opportunity"
+                value={postOpportunity}
+                onChange={(e) => setPostOpportunity(e.target.value as OpportunityCategory)}
+              >
+                {opportunityCategories.map((v) => (
+                  <NativeSelectOption key={v} value={v}>
+                    {t(v)}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </>
+          )}
           <label htmlFor="post-text">
             <T>{"Votre publication"}</T>
           </label>
@@ -331,27 +568,64 @@ export function FeedPage() {
             value={postSport}
             onChange={(e) => setPostSport(e.target.value)}
           >
+            <NativeSelectOption value="-">-</NativeSelectOption>
             {sports.map((s) => (
               <NativeSelectOption key={s}>{s}</NativeSelectOption>
             ))}
           </NativeSelect>
-          <label htmlFor="post-photo">
-            <ImagePlus size={16} />
-            <T>{"Illustration fournie (facultative)"}</T>
-          </label>
-          <NativeSelect id="post-photo" value={photo} onChange={(e) => setPhoto(e.target.value)}>
-            <NativeSelectOption value="">
-              <T>{"Sans image"}</T>
-            </NativeSelectOption>
-            {photos.map((p) => (
-              <NativeSelectOption key={p.src} value={p.src}>
-                {p.label}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          {photo && <img className="compose-preview" src={photo} alt="Illustration sélectionnée" />}
-          <Submit className="action primary" disabled={!text.trim()}>
-            <T>{"Publier dans la démo"}</T>
+          <PostAttachment attachment={attachment} />
+          <fieldset className="community-schedule">
+            <legend>
+              <T>{"Quand publier ?"}</T>
+            </legend>
+            <label className="schedule-toggle">
+              <input
+                type="checkbox"
+                checked={scheduled && premium}
+                disabled={!premium}
+                aria-describedby={!premium ? "schedule-premium-hint" : undefined}
+                onChange={(e) => setScheduled(e.target.checked)}
+              />
+              <T>{"Programmer cette publication"}</T>
+              {!premium && (
+                <span className="schedule-premium-badge" aria-hidden="true">
+                  Premium
+                </span>
+              )}
+            </label>
+            {!premium && (
+              <div className="schedule-premium-notice">
+                <p className="field-hint" id="schedule-premium-hint">
+                  <T>{"La programmation est réservée aux membres Premium."}</T>
+                </p>
+                <Link href="/abonnement?retour=/accueil">
+                  <T>{"Découvrir Premium"}</T>
+                </Link>
+              </div>
+            )}
+            {scheduled && premium && (
+              <>
+                <label htmlFor="post-start">
+                  <T>{"Date et heure (heure locale)"}</T>
+                </label>
+                <Input
+                  id="post-start"
+                  type="datetime-local"
+                  required
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                />
+                <p className="field-hint">
+                  <T>{"La démo doit rester ouverte pour publier à l’heure choisie."}</T>
+                </p>
+              </>
+            )}
+          </fieldset>
+          <Submit
+            className="action primary"
+            disabled={!text.trim() || attachment.busy || !!attachment.error}
+          >
+            <T>{scheduled && premium ? "Programmer" : "Publier dans la démo"}</T>
             <ArrowUpRight size={18} />
           </Submit>
         </form>
@@ -361,11 +635,52 @@ export function FeedPage() {
         onOpenChange={(open) => {
           if (!open) setCommentsId(null);
         }}
-        title="La conversation continue."
-        description="Commentaires fictifs, conservés uniquement pendant cette visite."
+        title="La publication complète"
+        description="Publication et commentaires de démonstration, conservés pendant cette visite."
       >
         {selected && (
           <>
+            <article className="post-detail">
+              <header className="post-author">
+                <img src={selected.avatar} alt="" />
+                <div>
+                  <h2>{selected.author === "self" ? displayName(profile) : selected.name}</h2>
+                  <p>{selected.role}</p>
+                </div>
+                <span className="post-sport">{selected.sport}</span>
+              </header>
+              <p className="post-text post-full-text">{selected.text}</p>
+              {selected.video && (
+                <video
+                  className="post-image"
+                  controls
+                  playsInline
+                  src={selected.video}
+                  aria-label="Vidéo de la publication"
+                />
+              )}
+              {selected.image && (
+                <img
+                  className="post-image"
+                  src={selected.image}
+                  alt={"Illustration sportive · " + selected.sport}
+                />
+              )}
+              <div className="post-actions">
+                <Button
+                  variant="ghost"
+                  aria-pressed={selected.liked}
+                  aria-label={selected.liked ? "Retirer mon j’aime" : "Aimer la publication"}
+                  onClick={() => dispatchSocial({ type: "like", id: selected.id })}
+                >
+                  <Heart size={18} fill={selected.liked ? "currentColor" : "none"} />
+                  {selected.likes}
+                </Button>
+              </div>
+            </article>
+            <h3 className="post-comments-heading">
+              <T>{"Commentaires"}</T>
+            </h3>
             <div className="comments-list">
               {visibleComments(social, access, selected).length ? (
                 visibleComments(social, access, selected).map((c) => (
@@ -424,322 +739,350 @@ export function FeedPage() {
 }
 
 export function NetworkPage() {
-  const { social, dispatchSocial, requestAccess, trust,profile,notify } = useDemo();
+  const { social, dispatchSocial, requestAccess, trust, profile } = useDemo();
+  const { t } = useLocale();
   const router = useRouter();
+  const premium = isPremium(social, profile.category);
   const [filters, setFilters] = useState<DirectoryFilters>({ ...emptyDirectoryFilters });
-  const { query, kind, sport } = filters;
-  const updateFilter = (key: keyof DirectoryFilters, value: string) => {
-    if(advancedDirectoryKeys.some(k=>k===key)&&!isPremium(social,profile.category)){notify('Ce critère avancé est inclus dans Premium. Les filtres standard restent gratuits.');return;}
-    setFilters((f) => ({ ...f, [key]: value }));
-  };
-  const [onlyFollowed, setOnlyFollowed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searched, setSearched] = useState(false);
+  const [advanced, setAdvanced] = useState(false);
+  const [expandedInvitations, setExpandedInvitations] = useState(false);
   const [member, setMember] = useState<Member | null>(null);
-  const filtered = members.filter(
+  const effectiveFilters = memberSearchFilters(filters, premium);
+  const sport = effectiveFilters.sport;
+  const updateFilter = (key: keyof DirectoryFilters, value: string) => {
+    if (!premium) return;
+    setFilters((f) => ({ ...f, [key]: value }));
+    setSearched(true);
+  };
+  const visibleMembers = members.filter((m) => !trust.blocked.includes(m.id));
+  const filtered = visibleMembers.filter((m) =>
+    matchesDirectory(m, memberSports[m.id] || [], effectiveFilters),
+  );
+  const invitations = social.connectionInvitations.filter(
+    (i) =>
+      i.status === "pending" && i.direction !== "outgoing" && !trust.blocked.includes(i.memberId),
+  );
+  const sentInvitations = social.connectionInvitations.filter(
+    (i) =>
+      i.status === "pending" && i.direction === "outgoing" && !trust.blocked.includes(i.memberId),
+  );
+  const suggested = visibleMembers.filter(
     (m) =>
-      !trust.blocked.includes(m.id) &&
-      (!onlyFollowed || social.following.includes(m.id)) &&
-      matchesDirectory(m, memberSports[m.id] || [], effectiveDirectoryFilters(filters,isPremium(social,profile.category))),
+      !isConnected(social, m.id) &&
+      !social.connectionInvitations.some((i) => i.memberId === m.id && i.status === "pending"),
   );
   function message(m: Member) {
     if (!requestAccess("message", m.id)) return;
     dispatchSocial({ type: "open-chat", id: m.id });
     router.push("/messages");
   }
+  function memberCard(m: Member) {
+    return (
+      <article className="member-card" key={m.id}>
+        <button className="member-intro" onClick={() => setMember(m)}>
+          <img src={m.image} alt="" />
+          <span>
+            <small>
+              {m.kind} · {memberSports[m.id]?.map((r) => r.sport).join(" / ") || m.sport}
+            </small>
+            <strong>{m.name}</strong>
+            {m.kind === "Joueurs" && ageOn(m.birthDate) !== null && (
+              <span>
+                {ageOn(m.birthDate)}
+                <T>{"ans"}</T>
+              </span>
+            )}
+            <span>{m.role}</span>
+            <span>{[m.gender, m.accountType].filter(Boolean).join(" · ")}</span>
+            {memberSports[m.id] && (
+              <span className="trust-filter-hint">
+                {memberSports[m.id]
+                  .filter((r) => sport === "Tous" || r.sport === sport)
+                  .map((r) =>
+                    [
+                      r.sport,
+                      r.level,
+                      r.ranking,
+                      r.position,
+                      r.dominantSide,
+                      r.paraSport === "yes" ? "Handisport" : "",
+                      r.availability,
+                      r.contractStatus,
+                    ]
+                      .filter(Boolean)
+                      .join(" · "),
+                  )
+                  .join(" / ")}
+              </span>
+            )}
+            <span className="member-location">
+              <MapPin size={12} />
+              {m.city}, {m.country}
+            </span>
+          </span>
+          <ArrowUpRight size={17} />
+        </button>
+        <div className="member-actions">
+          <Button
+            variant={social.following.includes(m.id) ? "secondary" : "default"}
+            aria-pressed={social.following.includes(m.id)}
+            onClick={() => dispatchSocial({ type: "follow", id: m.id })}
+          >
+            {social.following.includes(m.id) ? <Check size={16} /> : <Plus size={16} />}
+            {social.following.includes(m.id) ? "Suivi" : "Suivre"}
+          </Button>
+          <Button variant="outline" onClick={() => message(m)}>
+            <MessageCircle size={16} />
+            <T>{"Message"}</T>
+          </Button>
+        </div>
+      </article>
+    );
+  }
   return (
     <ProfileLayout>
       <div className="social-title">
-        <div>
-          <span className="mini-kicker">
-            <T>{"LES BONNES RENCONTRES"}</T>
-          </span>
-          <h1>
-            <T>{"Votre réseau"}</T>
-            <span>.</span>
-          </h1>
-        </div>
-        <UsersRound className="title-symbol" size={28} />
+        <h1>
+          <T>{"Votre réseau"}</T>
+          <span>.</span>
+        </h1>
       </div>
       <NetworkSections />
-      <SaveDirectorySearch filters={filters} onLoad={setFilters}/>
-      <nav className="extension-nav"><Link href="/talents">Mes listes de profils</Link><Link href="/recherches">Recherches & alertes</Link></nav>
-      <SearchField
-        value={query}
-        onChange={(v) => updateFilter("query", v)}
-        label="Nom, rôle, club ou ville…"
-      />
-      <Chips
-        label="Types de membres"
-        values={["Tous", "Joueurs", "Professionnels", "Collectives"]}
-        value={kind}
-        onChange={(v) => setFilters((f) => changeDirectoryKind(f, v))}
-      />
-      <div className="network-controls">
-        <SportSelect
-          id="network-sport"
-          value={sport}
-          onChange={(v) => setFilters((f) => ({ ...f, sport: v, position: "" }))}
-        />
-        <Button
-          variant="ghost"
-          className="followed-filter"
-          aria-pressed={onlyFollowed}
-          onClick={() => setOnlyFollowed(!onlyFollowed)}
-        >
-          <T>{"Suivis ·"}</T>
-          {social.following.length}
-        </Button>
-      </div>
-      <section className="directory-panel" aria-label="Filtres du réseau">
-        <h2>
-          {kind === "Joueurs"
-            ? "Trouver un sportif"
-            : kind === "Professionnels"
-              ? "Trouver un professionnel"
-              : kind === "Collectives"
-                ? "Trouver un collectif"
-                : "Affiner votre recherche"}
+      <section className="community-section" aria-labelledby="member-search-title">
+        <h2 id="member-search-title">
+          <T>{"Recherche"}</T>
         </h2>
-        <div className="directory-filter-grid">
-          <label>
-            <T>{"Pays"}</T>
-            <input
-              aria-label="Filtrer par pays"
-              value={filters.country}
-              onChange={(e) => updateFilter("country", e.target.value)}
-              list="filter-countries"
-              placeholder="Tous les pays"
-            />
-          </label>
-          <datalist id="filter-countries">
-            {countrySuggestions.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
-          <label>
-            <T>{"Ville"}</T>
-            <input
-              aria-label="Filtrer par ville"
-              value={filters.city}
-              onChange={(e) => updateFilter("city", e.target.value)}
-              placeholder="Toutes les villes"
-            />
-          </label>
-          {kind === "Joueurs" && (
-            <>
-              <ExtraDirectoryFilters filters={filters} onChange={updateFilter} />
+        <form
+          className="community-search-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setFilters((f) => ({ ...f, query: searchQuery }));
+            setSearched(true);
+          }}
+        >
+          <SearchField
+            value={searchQuery}
+            onChange={setSearchQuery}
+            label={t("Nom, rôle, club ou ville…")}
+          />
+          <Button type="submit" aria-label={t("Rechercher des membres")}>
+            <ArrowUpRight size={20} />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label={t("Affiner la recherche")}
+            aria-controls="member-advanced"
+            aria-expanded={advanced}
+            onClick={() => setAdvanced(!advanced)}
+          >
+            <ChevronDown size={20} className={advanced ? "community-chevron-open" : ""} />
+          </Button>
+        </form>
+        {advanced && (
+          <div className="community-filters" id="member-advanced">
+            {!premium && (
+              <div className="member-search-premium" id="member-search-premium-message">
+                <p>
+                  <T>
+                    {
+                      "Les filtres avancés sont réservés aux membres Premium. Passez à Premium pour rechercher par pays, ville, sport et classement."
+                    }
+                  </T>
+                </p>
+                <Link className="small-primary" href="/abonnement?retour=/reseau">
+                  <T>{"Découvrir Premium"}</T>
+                </Link>
+              </div>
+            )}
+            <fieldset
+              className="directory-filter-grid"
+              disabled={!premium}
+              aria-label={t("Filtres de recherche avancée")}
+              aria-describedby={!premium ? "member-search-premium-message" : undefined}
+            >
               <label>
-                <T>{"Genre"}</T>
-                <select
-                  aria-label="Filtrer par genre"
-                  value={filters.gender}
-                  onChange={(e) => updateFilter("gender", e.target.value)}
-                >
-                  <option value="Tous">
-                    <T>{"Tous les genres"}</T>
-                  </option>
-                  {genders.map((v) => (
-                    <option key={v} value={v}>
-                      <T>{v}</T>
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <T>{"Niveau"}</T>
-                <select
-                  aria-label="Filtrer par niveau"
-                  value={filters.level}
-                  onChange={(e) => updateFilter("level", e.target.value)}
-                >
-                  <option value="Tous">
-                    <T>{"Tous les niveaux"}</T>
-                  </option>
-                  {levels.map((v) => (
-                    <option key={v} value={v}>
-                      <T>{v}</T>
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <T>{"Position / poste"}</T>
-                <input
-                  aria-label="Filtrer par position"
-                  value={filters.position}
-                  onChange={(e) => updateFilter("position", e.target.value)}
-                  list="filter-positions"
-                  placeholder="Tous les postes"
+                <T>{"Pays"}</T>
+                <Input
+                  aria-label={t("Filtrer par pays")}
+                  value={filters.country}
+                  onChange={(e) => updateFilter("country", e.target.value)}
+                  list="member-countries"
                 />
               </label>
-              <datalist id="filter-positions">
-                {positionsFor(sport).map((v) => (
+              <datalist id="member-countries">
+                {countrySuggestions.map((v) => (
                   <option key={v} value={v} />
                 ))}
               </datalist>
               <label>
-                <T>{sideLabel(sport)}</T>
-                <select
-                  aria-label="Filtrer par côté dominant"
-                  value={filters.dominantSide}
-                  onChange={(e) => updateFilter("dominantSide", e.target.value)}
-                >
-                  <option value="Tous">
-                    <T>{"Tous les côtés"}</T>
-                  </option>
-                  {dominantSides.map((v) => (
-                    <option key={v} value={v}>
-                      <T>{v}</T>
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </>
-          )}
-          {["Professionnels", "Collectives"].includes(kind) && (
-            <label className="directory-wide">
-              <T>{"Type de compte"}</T>
-              <select
-                aria-label="Filtrer par type de compte"
-                value={filters.accountType}
-                onChange={(e) => updateFilter("accountType", e.target.value)}
-              >
-                <option value="Tous">
-                  <T>{"Tous les types de compte"}</T>
-                </option>
-                {(kind === "Professionnels" ? professionalTypes : collectiveTypes).map((v) => (
-                  <option key={v} value={v}>
-                    <T>{v}</T>
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-        </div>
-        {kind === "Tous" && (
-          <p className="field-hint">
-            <T>
-              {
-                "Choisissez Joueurs, Professionnels ou Collectives pour afficher les critères spécifiques."
-              }
-            </T>
-          </p>
-        )}
-        {kind === "Joueurs" && (
-          <details className="directory-extra">
-            <summary>
-              <T>{"Club et classement"}</T>
-            </summary>
-            <div className="directory-filter-grid">
-              <label>
-                <T>{"Club actuel ou passé"}</T>
-                <input
-                  aria-label="Filtrer par club"
-                  value={filters.club}
-                  onChange={(e) => updateFilter("club", e.target.value)}
-                  placeholder="Nom du club"
+                <T>{"Ville"}</T>
+                <Input
+                  aria-label={t("Filtrer par ville")}
+                  value={filters.city}
+                  onChange={(e) => updateFilter("city", e.target.value)}
                 />
+              </label>
+              <label>
+                <T>{"Sport"}</T>
+                <NativeSelect
+                  aria-label={t("Filtrer par sport")}
+                  value={filters.sport}
+                  onChange={(e) => updateFilter("sport", e.target.value)}
+                >
+                  {["Tous", ...sports].map((v) => (
+                    <NativeSelectOption key={v} value={v}>
+                      {t(v)}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
               </label>
               <label>
                 <T>{"Classement"}</T>
-                <input
-                  aria-label="Filtrer par classement"
+                <Input
+                  aria-label={t("Filtrer par classement")}
                   value={filters.ranking}
                   onChange={(e) => updateFilter("ranking", e.target.value)}
-                  placeholder="Ex. C15.2, P200…"
+                  placeholder="C15.2, P200…"
                 />
               </label>
-            </div>
-          </details>
-        )}
-        <Button
-          variant="ghost"
-          onClick={() => {
-            setFilters({ ...emptyDirectoryFilters, kind });
-            setOnlyFollowed(false);
-          }}
-        >
-          <T>{"Réinitialiser les filtres"}</T>
-        </Button>
-      </section>
-      <div className="list-caption">
-        <span>{onlyFollowed ? "Vous les suivez" : "Des profils à découvrir"}</span>
-        <span role="status" aria-live="polite">
-          {filtered.length}
-          <T>{"résultats"}</T>
-        </span>
-      </div>
-      <p className="demo-context">
-        <T>{"Tous les membres sont fictifs. « Collectives » : clubs, équipes et organisations."}</T>
-      </p>
-      <div className="network-list">
-        {filtered.map((m) => (
-          <article className="member-card" key={m.id}>
-            <button className="member-intro" onClick={() => setMember(m)}>
-              <img src={m.image} alt="" />
-              <span>
-                <small>
-                  {m.kind} · {memberSports[m.id]?.map((r) => r.sport).join(" / ") || m.sport}
-                </small>
-                <strong>{m.name}</strong>
-                {m.kind === "Joueurs" && ageOn(m.birthDate) !== null && (
-                  <span>
-                    {ageOn(m.birthDate)}
-                    <T>{"ans"}</T>
-                  </span>
-                )}
-                <span>{m.role}</span>
-                <span>{[m.gender, m.accountType].filter(Boolean).join(" · ")}</span>
-                {memberSports[m.id] && (
-                  <span className="trust-filter-hint">
-                    {memberSports[m.id]
-                      .filter((r) => sport === "Tous" || r.sport === sport)
-                      .map((r) =>
-                        [
-                          r.sport,
-                          r.level,
-                          r.ranking,
-                          r.position,
-                          r.dominantSide,
-                          r.paraSport === "yes" ? "Handisport" : "",
-                          r.availability,
-                          r.contractStatus,
-                        ]
-                          .filter(Boolean)
-                          .join(" · "),
-                      )
-                      .join(" / ")}
-                  </span>
-                )}
-                <span className="member-location">
-                  <MapPin size={12} />
-                  {m.city}, {m.country}
-                </span>
-              </span>
-              <ArrowUpRight size={17} />
-            </button>
-            <div className="member-actions">
+            </fieldset>
+            {premium && (
               <Button
-                variant={social.following.includes(m.id) ? "secondary" : "default"}
-                aria-pressed={social.following.includes(m.id)}
-                onClick={() => dispatchSocial({ type: "follow", id: m.id })}
+                variant="ghost"
+                onClick={() => {
+                  setFilters({ ...emptyDirectoryFilters });
+                  setSearchQuery("");
+                  setSearched(false);
+                }}
               >
-                {social.following.includes(m.id) ? <Check size={16} /> : <Plus size={16} />}
-                {social.following.includes(m.id) ? "Suivi" : "Suivre"}
+                <T>{"Réinitialiser les filtres"}</T>
               </Button>
-              <Button variant="outline" onClick={() => message(m)}>
-                <MessageCircle size={16} />
-                <T>{"Message"}</T>
+            )}
+          </div>
+        )}
+        {searched && (
+          <div className="community-results">
+            <div className="list-caption" role="status">
+              {filtered.length} <T>{"résultats"}</T>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSearched(false);
+                  setSearchQuery("");
+                  setFilters({ ...emptyDirectoryFilters });
+                }}
+              >
+                <T>{"Effacer la recherche"}</T>
               </Button>
             </div>
-          </article>
-        ))}
-      </div>
-      {!filtered.length && (
-        <Empty
-          title="Aucun profil pour ces critères."
-          text="Essayez une autre discipline, un autre type de membre ou une recherche plus courte."
-        />
+            <div className="network-list">{filtered.map(memberCard)}</div>
+            {!filtered.length && (
+              <p>
+                <T>{"Aucun profil pour ces critères."}</T>
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+      <section className="community-section" aria-labelledby="member-invitations-title">
+        <div className="community-section-heading">
+          <h2 id="member-invitations-title">
+            <T>{"Invitations"}</T> <span>{invitations.length}</span>
+          </h2>
+          {invitations.length > 2 && (
+            <Button
+              variant="ghost"
+              aria-label={t(
+                expandedInvitations ? "Réduire les invitations" : "Voir toutes les invitations",
+              )}
+              aria-expanded={expandedInvitations}
+              aria-controls="member-invitations"
+              onClick={() => setExpandedInvitations(!expandedInvitations)}
+            >
+              <ChevronDown
+                size={20}
+                className={expandedInvitations ? "community-chevron-open" : ""}
+              />
+            </Button>
+          )}
+        </div>
+        <div id="member-invitations" className="community-invitations">
+          {(expandedInvitations ? invitations : invitations.slice(0, 2)).map((invitation) => {
+            const m = members.find((m) => m.id === invitation.memberId);
+            return m ? (
+              <article className="community-invitation" key={m.id}>
+                <button className="community-invitation-profile" onClick={() => setMember(m)}>
+                  <img src={m.image} alt="" />
+                  <span>
+                    <strong>{m.name}</strong>
+                    <small>{m.role}</small>
+                  </span>
+                </button>
+                <div className="member-actions">
+                  <Button
+                    onClick={() =>
+                      dispatchSocial({ type: "connection-response", id: m.id, accept: true })
+                    }
+                  >
+                    <T>{"Accepter"}</T>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() =>
+                      dispatchSocial({ type: "connection-response", id: m.id, accept: false })
+                    }
+                  >
+                    <T>{"Refuser"}</T>
+                  </Button>
+                </div>
+              </article>
+            ) : null;
+          })}
+        </div>
+        {!invitations.length && (
+          <p className="field-hint">
+            <T>{"Aucune invitation en attente."}</T>
+          </p>
+        )}
+      </section>
+      {!!sentInvitations.length && (
+        <details className="connection-sent">
+          <summary>Demandes envoyées ({sentInvitations.length})</summary>
+          {sentInvitations.map((i) => {
+            const person = members.find((m) => m.id === i.memberId)!;
+            return (
+              <div key={i.memberId}>
+                <button type="button" onClick={() => setMember(person)}>
+                  {person.name} · En attente
+                </button>
+                <Button
+                  variant="ghost"
+                  onClick={() => dispatchSocial({ type: "connection-cancel", id: i.memberId })}
+                >
+                  Retirer
+                </Button>
+              </div>
+            );
+          })}
+        </details>
       )}
+      <section className="community-section" aria-labelledby="member-suggestions-title">
+        <h2 id="member-suggestions-title">
+          <T>{"Vous les connaissez peut-être"}</T>
+        </h2>
+        <div className="network-list">{suggested.map(memberCard)}</div>
+        {!suggested.length && (
+          <p className="field-hint">
+            <T>{"Aucune nouvelle suggestion pour le moment."}</T>
+          </p>
+        )}
+      </section>
+      <p className="demo-context">
+        <T>{"Profils et invitations fictifs. Les actions restent dans cette démo."}</T>
+      </p>
       <Modal
         open={!!member}
         onOpenChange={(v) => {
@@ -760,14 +1103,34 @@ export function NetworkPage() {
             </p>
             <p>{[member.gender, member.accountType].filter(Boolean).join(" · ")}</p>
             <p>{member.bio}</p>
+            <div className="member-relationship-actions">
+              <ConnectionControls memberId={member.id} />
+              <Button
+                className="member-follow-button"
+                variant="outline"
+                aria-pressed={social.following.includes(member.id)}
+                disabled={trust.blocked.includes(member.id)}
+                onClick={() => dispatchSocial({ type: "follow", id: member.id })}
+              >
+                {social.following.includes(member.id) ? "Ne plus suivre" : "Suivre"}
+              </Button>
+            </div>
+            <p className="field-hint">
+              Suivre affiche ses publications dans votre fil. Une connexion doit être acceptée pour
+              échanger sans quota et inviter cette personne à un match.
+            </p>
             <MemberDossier key={member.id} member={member} />
             <SafetyActions memberId={member.id} />
             <AppointmentRequestButton member={member} />
-            <Link className="action secondary" href={`/organiser?invite=${member.id}`}>
-              <T>{"Inviter à jouer"}</T>
-            </Link>
+            {isConnected(social, member.id) && !trust.blocked.includes(member.id) && (
+              <Link className="action secondary" href={`/organiser?invite=${member.id}`}>
+                <T>{"Inviter à jouer"}</T>
+              </Link>
+            )}
             <Button className="action primary" onClick={() => message(member)}>
-              <T>{"Commencer une conversation"}</T>
+              <T>
+                {isConnected(social, member.id) ? "Écrire librement" : "Commencer une conversation"}
+              </T>
               <MessageCircle size={17} />
             </Button>
           </div>
@@ -994,7 +1357,7 @@ export function OpportunitiesPage() {
   const [selected, setSelected] = useState<Opportunity | null>(null);
   const filtered = opportunities.filter(
     (o) =>
-      (type === "Toutes" || o.type === type) &&
+      matchesOpportunityType(o, type) &&
       (sport === "Tous" || o.sport === sport) &&
       (!savedOnly || social.saved.includes(o.id)) &&
       matchesQuery([o.title, o.city, o.owner, o.sport].join(" "), query),
@@ -1018,10 +1381,16 @@ export function OpportunitiesPage() {
         <T>{"Trouvez ce qui vous fait avancer."}</T>
       </p>
       <SearchField value={query} onChange={setQuery} label="Une opportunité, une ville…" />
-      <CareerNav />
       <Chips
         label="Types d’opportunités"
-        values={["Toutes", "Coaching", "Recrutement", "Partenariat", "Sponsoring"]}
+        values={[
+          "Toutes",
+          "Coaching",
+          "Recrutement",
+          "Partenariat",
+          "Sponsoring",
+          "Essais groupés",
+        ]}
         value={type}
         onChange={setType}
       />
@@ -1120,23 +1489,27 @@ export function OpportunitiesPage() {
                 <li key={d}>{d}</li>
               ))}
             </ul>
-            {['coach', 'tryout'].includes(selected.id) ? <ApplyButton offerId={selected.id} /> : <Button
-              className="action primary"
-              aria-pressed={social.interested.includes(selected.id)}
-              onClick={() => {
-                dispatchSocial({ type: "interest", id: selected.id });
-                notify(
-                  social.interested.includes(selected.id)
-                    ? "Intérêt retiré de la démo."
-                    : "Intérêt enregistré dans la démo. Aucune candidature n’a été envoyée.",
-                );
-              }}
-            >
-              {social.interested.includes(selected.id)
-                ? "Intérêt enregistré · annuler"
-                : "Ça m’intéresse · simuler"}
-              <Check size={17} />
-            </Button>}
+            {["coach", "tryout"].includes(selected.id) ? (
+              <ApplyButton offerId={selected.id} />
+            ) : (
+              <Button
+                className="action primary"
+                aria-pressed={social.interested.includes(selected.id)}
+                onClick={() => {
+                  dispatchSocial({ type: "interest", id: selected.id });
+                  notify(
+                    social.interested.includes(selected.id)
+                      ? "Intérêt retiré de la démo."
+                      : "Intérêt enregistré dans la démo. Aucune candidature n’a été envoyée.",
+                  );
+                }}
+              >
+                {social.interested.includes(selected.id)
+                  ? "Intérêt enregistré · annuler"
+                  : "Ça m’intéresse · simuler"}
+                <Check size={17} />
+              </Button>
+            )}
           </div>
         )}
       </Modal>

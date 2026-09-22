@@ -10,6 +10,8 @@ import "./social.css";
 import "./subscription.css";
 import "./events.css";
 import "./trust.css";
+import "./community.css";
+import "./agenda.css";
 import { UpgradeGate } from "@/components/subscription-ui";
 import { DemoProvider } from "@/components/demo-provider";
 

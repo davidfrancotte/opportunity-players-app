@@ -24,15 +24,12 @@ export function SubscriptionPage() {
     <ProfileLayout back="/profil">
       <div className="extension-page">
         <header className="subscription-hero">
-          <span className="mini-kicker">ARENA / GRATUIT & PREMIUM</span>
+          <span className="mini-kicker">{paid ? "ARENA / MON ABONNEMENT" : "ARENA / GRATUIT & PREMIUM"}</span>
           <h1>
-            Un réseau ouvert.
-            <br />
-            Des outils pour aller plus loin<span>.</span>
+            {paid ? <>Votre Premium est actif<span>.</span></> : <>Un réseau ouvert.<br />Des outils pour aller plus loin<span>.</span></>}
           </h1>
           <p>
-            Votre profil, les réponses, commentaires, réactions et partages restent gratuits.
-            Choisissez les outils adaptés à vos projets.
+            {paid ? "Vos outils Premium sont disponibles. Retrouvez ici vos accès et vos limites d’utilisation." : "Votre profil, les réponses, commentaires, réactions et partages restent gratuits. Choisissez les outils adaptés à vos projets."}
           </p>
         </header>
         <div className="subscription-current">
@@ -44,7 +41,7 @@ export function SubscriptionPage() {
             encore disponibles ce mois-ci
           </span>
         </div>
-        <article className="premium-offer">
+        {!paid && <article className="premium-offer">
           <span>PREMIUM {categoryLabel(profile.category).toUpperCase()}</span>
           <div className="billing-period" role="group" aria-label="Périodicité de la formule">
             <Button aria-pressed={!annual} onClick={() => setAnnual(false)}>Mensuel</Button>
@@ -78,7 +75,7 @@ export function SubscriptionPage() {
             Simulation gratuite. Aucun prélèvement, aucune carte, aucun abonnement réel. TVA et
             conditions commerciales à préciser avant lancement.
           </p>
-        </article>
+        </article>}
         <section className="extension-card">
           <h2>Vos accès, en détail</h2>
           <p>
@@ -118,7 +115,7 @@ export function SubscriptionPage() {
         <section className="extension-card">
           <h2>Comment les limites fonctionnent</h2>
           <p>
-            Un quota de contact est consommé au premier message vers un nouvel interlocuteur, pas à
+            Les connexions acceptées peuvent échanger sans consommer de quota. Hors connexions, un quota de contact est consommé au premier message vers un nouvel interlocuteur, pas à
             chaque réponse. Le quota gratuit est de {free.contacts} nouveaux contacts par mois,
             contre {premium.contacts} en Premium. Les réceptions et conversations déjà engagées
             restent gratuites.
@@ -168,7 +165,7 @@ export function SubscriptionPage() {
           <Link href="/accueil">Continuer dans l’app</Link>
         </nav>
         <Modal
-          open={confirm}
+          open={confirm && !paid}
           onOpenChange={setConfirm}
           title="Activez la simulation"
           description="Vous débloquez les outils Premium de ce profil fictif. Aucun paiement réel."

@@ -24,6 +24,7 @@ import { emptyDirectoryFilters, effectiveDirectoryFilters, matchesDirectory, typ
 import { memberSports } from "@/lib/trust";
 import { cities, distanceKm, canViewMatch, personalMatch, profileCity } from "@/lib/events";
 import { calendarFile, weeklyDates, type Search, type Team, type Manager } from "@/lib/extensions";
+import { agendaEntries } from "@/lib/agenda";
 
 const uid = () => crypto.randomUUID();
 const name = (id: string) =>
@@ -101,7 +102,7 @@ const routes = [
   ["talents", "Talents & portefeuille", UsersRound],
   ["essais-groupes", "Essais groupés", UsersRound],
   ["equipes", "Équipes & accès", Layers],
-  ["calendrier-avance", "Agenda avancé", CalendarDays],
+  ["agenda", "Agenda", CalendarDays],
   ["statistiques", "Statistiques & invitations", ChartNoAxesCombined],
 ] as const;
 export function ExtensionNav({ compact = false }: { compact?: boolean }) {
@@ -185,7 +186,7 @@ export function ExtensionPage({ section = "outils" }: { section?: string }) {
                 commentaires et partages restent gratuits.
               </p>
               <Link href="/abonnement" className="text-link">
-                Comparer gratuit et Premium
+                {careerActor.premium ? "Gérer mon abonnement" : "Comparer gratuit et Premium"}
               </Link>
             </Card>
             <ExtensionNotices />
@@ -929,7 +930,7 @@ function TrialWorkspace() {
             </Button>
           </article>
         ))}
-        <Link href="/calendrier-avance">Retrouver les sessions dans l’agenda</Link>
+        <Link href="/agenda">Retrouver les sessions dans l’agenda</Link>
       </Card>
     </>
   );
@@ -1283,7 +1284,7 @@ function TeamWorkspace() {
     </>
   );
 }
-function CalendarWorkspace() {
+export function CalendarWorkspace({ compact = false }: { compact?: boolean }) {
   const {
     extensionWorkspace: w,
     dispatchExtension,
@@ -1304,69 +1305,7 @@ function CalendarWorkspace() {
     [staff, setStaff] = useState<string[]>(["owner"]);
   const originals = events.matches.filter((m) => m.host === "me" && !m.cancelled),
     original = originals.find((m) => m.id === source) || originals[0];
-  const items = [
-    ...events.matches
-      .filter((m) => personalMatch(m) && m.confirmed && !m.cancelled)
-      .flatMap((m) =>
-        m.slots
-          .filter((s) => s.id === m.confirmed)
-          .map((s) => ({
-            id: m.id,
-            title: m.title,
-            start: s.start,
-            minutes: s.minutes,
-            place: m.venue,
-          })),
-      ),
-    ...w.sessions.map((s) => ({
-      id: s.id,
-      title: `Essai : ${s.title}`,
-      start: s.start,
-      minutes: 90,
-      place: s.place,
-    })),
-    ...w.interviews
-      .filter((i) => i.status === "confirmed")
-      .map((i) => ({
-        id: i.id,
-        title: `Entretien : ${name(i.candidate)}`,
-        start: i.start,
-        minutes: 60,
-        place: i.place,
-      })),
-    ...career.appointments
-      .filter(
-        (a) =>
-          a.status === "booked" &&
-          (a.requester === careerActor.id || a.professional === careerActor.id),
-      )
-      .flatMap((a) =>
-        career.slots
-          .filter((s) => s.id === a.slot)
-          .map((s) => ({
-            id: a.id,
-            title: "Rendez-vous professionnel",
-            start: s.start,
-            minutes: 30,
-            place: s.place,
-          })),
-      ),
-    ...career.applications
-      .filter(
-        (a) =>
-          a.stage === "confirmed" &&
-          a.trial &&
-          (a.candidate === careerActor.id ||
-            career.offers.some((o) => o.id === a.offerId && o.owner === careerActor.id)),
-      )
-      .map((a) => ({
-        id: a.id,
-        title: `Essai : ${a.name}`,
-        start: a.trial!.start,
-        minutes: 60,
-        place: a.trial!.place,
-      })),
-  ].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const items = agendaEntries(events, career, w, careerActor.id, name);
   function download() {
     if (!careerActor.premium) return;
     const blob = new Blob([calendarFile(items, w.calendar.reminder)], {
@@ -1405,7 +1344,7 @@ function CalendarWorkspace() {
   }
   return (
     <>
-      <Card title="Un agenda partagé pour vos activités">
+      {!compact && <Card title="Un agenda partagé pour vos activités">
         <p>
           Matchs confirmés, essais, rendez-vous et entretiens acceptés. Les créneaux et dates sont
           affichés dans votre fuseau local.
@@ -1419,7 +1358,7 @@ function CalendarWorkspace() {
             </p>
           </article>
         ))}
-      </Card>
+      </Card>}
       <Premium>
         <Card title="Agenda externe et rappels">
           <p>
@@ -1486,7 +1425,7 @@ function CalendarWorkspace() {
                   type: "notice",
                   id: uid(),
                   text: `Rappel simulé : ${items[0]?.title} dans ${w.calendar.reminder} minutes.`,
-                  href: "/calendrier-avance",
+                  href: "/agenda",
                 })
               }
             >

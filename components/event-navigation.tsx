@@ -4,8 +4,11 @@ import Link from "next/link";
 import { Bell, CalendarDays, ArrowUpRight } from "lucide-react";
 import { useDemo } from "./demo-provider";
 export function EventHeader() {
-  const { events, career, careerActor,extensionWorkspace } = useDemo();
-  const unread = events.notices.filter((n) => n.recipient === "me" && !n.read).length + career.notices.filter(n => n.recipient === careerActor.id && !n.read).length + extensionWorkspace.notices.filter(n=>!n.read).length;
+  const { events, career, careerActor, extensionWorkspace } = useDemo();
+  const unread =
+    events.notices.filter((n) => n.recipient === "me" && !n.read).length +
+    career.notices.filter((n) => n.recipient === careerActor.id && !n.read).length +
+    extensionWorkspace.notices.filter((n) => !n.read).length;
   return (
     <div className="event-header">
       <Link href="/agenda" className="icon-link" aria-label="Mon agenda">
@@ -22,7 +25,11 @@ export function EventHeader() {
     </div>
   );
 }
-export function NetworkSections({ active = "members" }: { active?: "members" | "play" }) {
+export function NetworkSections({
+  active = "members",
+}: {
+  active?: "members" | "play" | "agenda";
+}) {
   return (
     <nav className="network-sections" aria-label="Rubriques du réseau">
       <Link href="/reseau" aria-current={active === "members" ? "page" : undefined}>
@@ -32,8 +39,9 @@ export function NetworkSections({ active = "members" }: { active?: "members" | "
         <T>{"Jouer ensemble"}</T>
         <span>NEW</span>
       </Link>
-      <Link href="/rendez-vous">Rendez-vous</Link>
-      <Link href="/calendrier-avance">Agenda avancé</Link>
+      <Link href="/agenda" aria-current={active === "agenda" ? "page" : undefined}>
+        <T>{"Agenda"}</T>
+      </Link>
     </nav>
   );
 }

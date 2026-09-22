@@ -67,7 +67,12 @@ export type EventNotice = {
     | "reminder"
     | "message";
 };
+export type SpectatorEvent = {
+  id: string; title: string; sport: string; start: string; minutes: number; place: string;
+};
 export type EventState = {
+  spectatorEvents: SpectatorEvent[];
+  spectatorInterests: string[];
   radius:number;
   matches: Match[];
   notices: EventNotice[];
@@ -77,8 +82,9 @@ export type EventState = {
   reminders: boolean;
   banners: boolean;
 };
-export type EventContext = { premium: boolean; city: string; now: number; category?:Category; radius?:number };
+export type EventContext = { premium: boolean; city: string; now: number; category?:Category; radius?:number; connections?: string[] };
 export type EventAction =
+  | { type: "spectator-interest"; id: string; interested: boolean }
   | {type:'discovery';radius:number}
   | { type: "safety-notice"; text: string }
   | { type: "create"; match: Match }
@@ -155,6 +161,12 @@ export function createEventState(now = Date.now()): EventState {
     minutes: 90,
   });
   return {
+    spectatorEvents: [
+      { id: "spectator-football", title: "Arena FC · Horizon FC", sport: "Football", start: slot("spectator-1", 2).start, minutes: 120, place: "Liège · stade démo" },
+      { id: "spectator-padel", title: "Finale du tournoi de padel", sport: "Padel", start: slot("spectator-2", 5).start, minutes: 120, place: "Namur · club démo" },
+      { id: "spectator-basket", title: "Arena Basket · Horizon Basket", sport: "Basketball", start: slot("spectator-3", 12).start, minutes: 120, place: "Bruxelles · salle démo" },
+    ],
+    spectatorInterests: ["spectator-football"],
     radius:50,
     matches: [
       {
@@ -261,6 +273,12 @@ export function eventReducer(
   const s: EventState = structuredClone(state);
   s.error = "";
   const fail = (error: string) => ({ ...state, error });
+  if (a.type === "spectator-interest") {
+    if (!s.spectatorEvents.some(e => e.id === a.id)) return fail("Événement introuvable.");
+    s.spectatorInterests = s.spectatorInterests.filter(id => id !== a.id);
+    if (a.interested) s.spectatorInterests.push(a.id);
+    return s;
+  }
   if(a.type==='discovery')return Number.isFinite(a.radius)&&a.radius>=1&&a.radius<=500?{...s,radius:ctx.premium?a.radius:50}:fail('Rayon invalide.');
   if(a.type==='series') {
     if(!ctx.premium||!a.matches.length||a.matches.length>12)return fail('Premium permet de créer une série de 1 à 12 rencontres.');
@@ -385,6 +403,8 @@ export function eventReducer(
       return fail(
         "Invitez au moins un contact ou ouvrez le match aux membres proches.",
       );
+    if (m.invitees.some(id => !(ctx.connections || []).includes(id)))
+      return fail("Vous pouvez inviter uniquement vos connexions acceptées et non bloquées.");
     if (s.matches.some((e) => e.id === m.id))
       return fail("Ce match existe déjà.");
     m.host = "me";

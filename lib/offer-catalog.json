@@ -407,7 +407,7 @@
     {
       "feature": "Découverte et participation aux matchs",
       "detail": "Voir les événements locaux, proposer sa participation et répondre aux invitations.",
-      "free": "V, découverte dans un rayon de 50 km",
+      "free": "Invitations personnelles uniquement. Découverte à proximité réservée à Premium.",
       "paid": "V"
     },
     {
@@ -631,7 +631,7 @@
     {
       "feature": "Découverte et participation aux événements",
       "detail": "Voir les événements locaux et proposer sa participation. Payant : rayon personnalisable et alertes.",
-      "free": "V, découverte dans un rayon de 50 km",
+      "free": "Invitations personnelles uniquement. Découverte à proximité réservée à Premium.",
       "paid": "V"
     },
     {

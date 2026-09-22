@@ -10,7 +10,7 @@ import {
   suggestedTotals,
 } from "../lib/events.ts";
 const now = Date.parse("2026-09-19T10:00:00Z"),
-  paid = { premium: true, city: "Liège", now },
+  paid = { premium: true, city: "Liège", now, connections: ["lea", "noah", "sam", "horizon", "marc", "ines", "united", "academie"] },
   free = { ...paid, premium: false };
 const act = (s, a, c = paid) => eventReducer(s, { action: a, context: c });
 function event(overrides = {}) {

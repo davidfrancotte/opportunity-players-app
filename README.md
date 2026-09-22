@@ -2,7 +2,13 @@
 
 Démo de l’app uniquement : identité Arena Studio validée, interface mobile-first, cartes anthracite arrondies, blanc cassé, vert acide et photographie sportive. Projet indépendant du site vitrine et de sa copie Netlify.
 
+## Mise à jour Home et Network · 22 septembre 2026
+
+Voir [HOME-NETWORK.md](HOME-NETWORK.md) pour le nouveau fil catégorisé, les filtres Premium, la programmation intégrée, les invitations et la rubrique À proximité. Cette mise à jour remplace les descriptions historiques ci-dessous concernant le bloc de matchs sur Home, la recherche avancée et la découverte gratuite des matchs par les professionnels/collectifs.
+
 ## Démarrer
+
+L’onglet Réseau regroupe désormais le calendrier et les rendez-vous dans **Agenda** : calendrier mensuel, filtres Matchs / RDV pro / Agenda sportif et intérêts spectateur. Voir [AGENDA.md](AGENDA.md).
 
 Node.js 24, npm.
 

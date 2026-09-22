@@ -2,6 +2,7 @@ import type { Category } from "./model";
 import type { DirectoryFilters } from "./directory";
 import { limits } from "./entitlements.ts";
 import { moderateText } from "./trust.ts";
+import { validClassification, type PostClassification } from './community.ts';
 
 export type Search = {
   id: string;
@@ -11,10 +12,12 @@ export type Search = {
   alerts: boolean;
   seen: string[];
 };
-export type Schedule = {
+export type Schedule = PostClassification & {
   id: string;
   text: string;
   sport: string;
+  image?: string;
+  video?: string;
   start: string;
   status: "planned" | "published" | "cancelled";
 };
@@ -218,7 +221,7 @@ export function extensionReducer(
       break;
     }
     case "schedule":
-      if (!clean(a.value.text, 1200) || !clean(a.value.sport) || !future(a.value.start, c.now))
+      if (!clean(a.value.text, 1200) || !clean(a.value.sport) || !validClassification(a.value) || !future(a.value.start, c.now))
         return fail("Indiquez un contenu valide et une date future.");
       if (w.schedules.some((x) => x.id === a.value.id))
         return fail("Cette publication existe déjà.");
