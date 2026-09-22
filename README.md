@@ -90,7 +90,13 @@ Le parrainage vérifie les étapes simulées (e-mail, profil, première connexio
 
 **Aucun backend, compte réel, authentification, vérification d’email réelle ou envoi d’email.** Aucun mot de passe saisi n’est conservé dans l’état partagé. Le profil, les publications, les suivis, les messages et les favoris restent uniquement dans la mémoire de l’onglet pendant la navigation et sont effacés au rechargement ou à la réinitialisation de la démo.
 
-Tous les membres, clubs, publications, annonces et conversations fournis sont fictifs. Les messages ne sont pas envoyés, les posts ne sont pas publiés sur un réseau réel et aucun recruteur n’est contacté. Pas de stockage navigateur, téléversement, paiement, modération ou synchronisation entre appareils. Les filtres s’appliquent seulement au jeu de démonstration ; certaines disciplines n’ont volontairement aucun résultat.
+Tous les membres, clubs, publications, annonces et conversations fournis sont fictifs. Les messages ne sont pas envoyés, les posts ne sont pas publiés sur un réseau réel et aucun recruteur n’est contacté. Aucune donnée de profil n’est enregistrée dans le navigateur. Seules les préférences de langue et d’apparence sont mémorisées localement. Pas de téléversement, paiement, modération ou synchronisation entre appareils. Les filtres s’appliquent seulement au jeu de démonstration ; certaines disciplines n’ont volontairement aucun résultat.
+
+### Apparence mobile
+
+Dans **Profil → Réglages → Apparence de l’app**, tous les membres peuvent choisir Mode clair ou Mode sombre. Le sombre reste le mode initial. Le choix s’applique immédiatement à tous les écrans et fenêtres, et persiste dans `op-mobile-appearance` sur le même navigateur/origine, indépendamment de Premium et de la réinitialisation de la démo. Si le stockage est bloqué, le choix fonctionne pour la visite en cours. Le thème web conserve sa préférence séparée.
+
+`app/light.css` est généré depuis les couleurs des styles mobiles : lancer `npm run theme:build` après modification d’un CSS source (automatique avant le build). `npm run theme:check` contrôle sa fraîcheur et `npm run test:appearance` teste l’initialisation avant affichage et les cas de stockage indisponible. Les photographies conservent leurs couleurs et leurs légendes contrastées.
 
 L’activation Premium est simulée, sans facturation ni renouvellement. Les droits et quotas sont des règles d’interface en mémoire, **pas une sécurité ou un contrôle d’abonnement serveur**. Ils sont remis à zéro au rechargement. Un backend authentifié avec validation atomique des droits et des quotas est indispensable avant une utilisation réelle. Les montants viennent des décisions du porteur du projet, pas d’une vérification de tarifs commerciaux actuels. TVA, renouvellement et conditions de résiliation restent à préciser. Voir [SUBSCRIPTIONS.md](SUBSCRIPTIONS.md).
 

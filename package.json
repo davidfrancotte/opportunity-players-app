@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "theme:build": "node scripts/build-light-theme.mjs",
+    "theme:check": "node scripts/build-light-theme.mjs --check",
+    "test:appearance": "node --test scripts/appearance.test.mjs",
+    "prebuild": "npm run theme:build",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

@@ -1,4 +1,5 @@
 "use client";
+import { AppearancePreferences } from "./app-appearance";
 import {ExtensionNav} from './extension-screens';
 import { LanguageSwitch, T, useLocale } from "./locale";
 import { useState, type ReactNode, type FormEvent } from "react";
@@ -1021,6 +1022,7 @@ export function SettingsPage() {
   return (
     <ProfileLayout back="/profil" title="Votre espace, simplement.">
       <div className="settings-grid">
+        <AppearancePreferences />
         <ExtensionNav/>
         <PlanStatus />
         <Link href="/abonnement" className="settings-action">Gérer mon abonnement <ArrowUpRight size={17} /></Link>

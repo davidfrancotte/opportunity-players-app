@@ -12,6 +12,10 @@ import "./events.css";
 import "./trust.css";
 import "./community.css";
 import "./agenda.css";
+import "./appearance.css";
+import "./light.css";
+import { AppAppearanceProvider } from "@/components/app-appearance";
+import { appearanceBootstrap } from "@/lib/appearance";
 import { UpgradeGate } from "@/components/subscription-ui";
 import { DemoProvider } from "@/components/demo-provider";
 
@@ -43,11 +47,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#101214",
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className="dark">
+    <html lang="fr" className="dark" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <meta name="theme-color" content="#101214" suppressHydrationWarning />
+        <script dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} />
+      </head>
       <body className={font.variable}>
         <a href="#main" className="skip-link">
           Aller au contenu
@@ -58,10 +65,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ne saisissez pas de données personnelles.
           </p>
         </noscript>
-        <DemoProvider>
+        <AppAppearanceProvider><DemoProvider>
           <div className="mobile-app-frame">{children}</div>
           <UpgradeGate />
-        </DemoProvider>
+        </DemoProvider></AppAppearanceProvider>
       </body>
     </html>
   );

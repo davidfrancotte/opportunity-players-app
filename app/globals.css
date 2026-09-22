@@ -16,14 +16,14 @@
   --color-popover-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: #101214;
-  --color-secondary: #24282b;
+  --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--foreground);
-  --color-muted: #24282b;
-  --color-muted-foreground: #a9afaf;
-  --color-border: #3b4043;
-  --color-input: #3b4043;
-  --color-ring: var(--primary);
-  --color-destructive: #ffaaaa;
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
   --font-sans: var(--font-arena), Arial, sans-serif;
 }
 :root,
@@ -32,6 +32,13 @@
   --foreground: #f1f2eb;
   --card: #1d2124;
   --primary: #d1f94c;
+  --secondary: #24282b;
+  --muted: #24282b;
+  --muted-foreground: #a9afaf;
+  --border: #3b4043;
+  --input: #3b4043;
+  --ring: var(--primary);
+  --destructive: #ffaaaa;
   color-scheme: dark;
 }
 * {
